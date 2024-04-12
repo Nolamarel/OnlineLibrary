@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_brown"
+    tools:context=".Activities.LoginActivity">
+
+    <include layout="@layout/appbar" />
+
+    <EditText
+        android:id="@+id/email_et"
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="60dp"
+        android:hint="Адрес почты"
+        android:inputType="text"
+        app:layout_constraintEnd_toEndOf="@+id/main_books_iv"
+        app:layout_constraintStart_toStartOf="@+id/main_books_iv"
+        app:layout_constraintTop_toBottomOf="@+id/main_books_iv" />
+
+    <EditText
+        android:id="@+id/password_et"
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="24dp"
+        android:hint="Пароль"
+        android:inputType="textPassword"
+        app:layout_constraintEnd_toEndOf="@+id/email_et"
+        app:layout_constraintStart_toStartOf="@+id/email_et"
+        app:layout_constraintTop_toBottomOf="@+id/email_et" />
+
+    <ImageView
+        android:id="@+id/main_books_iv"
+        android:layout_width="252dp"
+        android:layout_height="242dp"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/books" />
+
+    <TextView
+        android:id="@+id/no_account"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="70dp"
+        android:layout_marginBottom="32dp"
+        android:text="Еще нет аккаунта?"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/sign_up"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="70dp"
+        android:layout_marginBottom="32dp"
+        android:text="Зарегистрироваться"
+        android:textColor="@color/dark_brown"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/no_account" />
+
+    <TextView
+        android:id="@+id/forgot_pas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Забыли пароль?"
+        app:layout_constraintEnd_toEndOf="@+id/sign_in_button"
+        app:layout_constraintStart_toStartOf="@+id/sign_in_button"
+        app:layout_constraintTop_toBottomOf="@+id/sign_in_button" />
+
+    <Button
+        android:id="@+id/sign_in_button"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="@color/dark_brown"
+        android:text="Войти"
+        app:layout_constraintEnd_toEndOf="@+id/password_et"
+        app:layout_constraintStart_toStartOf="@+id/password_et"
+        app:layout_constraintTop_toBottomOf="@+id/password_et" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

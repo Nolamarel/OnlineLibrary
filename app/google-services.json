@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "167689794469",
+    "project_id": "online-library-38d0b",
+    "storage_bucket": "online-library-38d0b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:167689794469:android:98c04d60df5049fe126e4c",
+        "android_client_info": {
+          "package_name": "com.nolamarel.onlinelibrary"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIm5kOtQO6iDCQocpohjQUCTv5OAadEe0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

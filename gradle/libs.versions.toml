@@ -1,5 +1,6 @@
 [versions]
 agp = "8.3.1"
+firebaseBom = "32.8.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -7,6 +8,11 @@ appcompat = "1.6.1"
 material = "1.11.0"
 activity = "1.8.0"
 constraintlayout = "2.1.4"
+firebaseAuth = "22.3.1"
+design = "28.0.0"
+gs = "4.4.1"
+firebaseDatabase = "20.3.1"
+glide = "4.16.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -16,7 +22,16 @@ appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "a
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+design = {group = "com.android.support", name = "design", version.ref = "design"}
+firebase-database = {group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase"}
+glide = {group = "com.github.bumptech.glide", name = "glide", version.ref = "glide"}
+
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "gs"}
+
 
