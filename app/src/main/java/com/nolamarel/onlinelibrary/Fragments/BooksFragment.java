@@ -6,12 +6,10 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.Firebase;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -30,26 +28,16 @@ public class BooksFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentBooksBinding.inflate(inflater, container, false);
+
+        binding.arrowBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getParentFragmentManager().popBackStack();
+            }
+        });
+
         String sectionId = getArguments().getString("sectionId");
-        //Log.d("MySection", sectionId);
-
-//        ArrayList<Book> books = new ArrayList<>();
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//        books.add(new Book("12345", "Margaret Mitchell", "Gone with the Wind", R.drawable.peace));
-//
-//
-//        binding.booksRv.setLayoutManager(new LinearLayoutManager(getContext()));
-//        binding.booksRv.setAdapter(new BookAdapter(books, this));
-
         loadBooks(sectionId);
-
-
 
         return binding.getRoot();
     }
@@ -87,36 +75,13 @@ public class BooksFragment extends Fragment{
                         Fragment fragment = new BookDescriptionFragment();
                         Bundle args = new Bundle();
                         args.putString("bookId", selectedBookId);
+
                         fragment.setArguments(args);
                         getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).addToBackStack(null).commit();
                     }
                 }));
 
                 }
-
-//                for(DataSnapshot bookSnapshot : snapshot.getChildren()){
-//                    if(bookSnapshot.child("genre").equals(FirebaseDatabase.getInstance().getReference().child("genres").child("name"))){
-//                        continue;
-//                    }
-//                    String bookName = bookSnapshot.child("name").getValue().toString();
-//                    String bookAuthor = bookSnapshot.child("author").getValue().toString();
-//                    String bookId = bookSnapshot.getKey().toString();
-//
-//                    books.add(new Book(bookId, bookAuthor, bookName, R.drawable.peace));
-//                }
-//
-//                binding.booksRv.setLayoutManager(new LinearLayoutManager(getContext()));
-//                binding.booksRv.setAdapter(new BookAdapter(books, new OnItemClickListener.ItemClickListener() {
-//                    @Override
-//                    public void onItemClick(int position) {
-//                        String selectedBookId = books.get(position).getBookId();
-//                        Fragment fragment = new BookDescriptionFragment();
-//                        Bundle args = new Bundle();
-//                        args.putString("bookId", selectedBookId);
-//                        fragment.setArguments(args);
-//                        getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).addToBackStack(null).commit();
-//                    }
-//                }));
             }
 
             @Override
@@ -125,11 +90,5 @@ public class BooksFragment extends Fragment{
             }
         });
     }
-
-//    @Override
-//    public void onItemClick(int position) {
-//        Fragment fragment = new BookDescriptionFragment();
-//        getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).addToBackStack(null).commit();
-//    }
 }
 

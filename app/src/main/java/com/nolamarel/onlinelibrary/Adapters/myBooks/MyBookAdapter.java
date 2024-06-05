@@ -1,5 +1,7 @@
 package com.nolamarel.onlinelibrary.Adapters.myBooks;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,14 +16,19 @@ import com.nolamarel.onlinelibrary.OnItemClickListener;
 import com.nolamarel.onlinelibrary.R;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class MyBookAdapter extends RecyclerView.Adapter<MyBookAdapter.MyBookViewHolder> {
-    private ArrayList<MyBook> books = new ArrayList<>();
+public abstract class MyBookAdapter extends RecyclerView.Adapter<MyBookAdapter.MyBookViewHolder> {
+    private List<MyBook> books = new ArrayList<>();
     private OnItemClickListener.ItemClickListener listener;
 
-    public MyBookAdapter(ArrayList<MyBook> books, OnItemClickListener.ItemClickListener listener) {
+    public MyBookAdapter(List<MyBook> books, OnItemClickListener.ItemClickListener listener) {
         this.books = books;
         this.listener = listener;
+    }
+
+    public MyBookAdapter(ArrayList<MyBook> books) {
+        this.books = books;
     }
 
     @NonNull
@@ -35,7 +42,6 @@ public class MyBookAdapter extends RecyclerView.Adapter<MyBookAdapter.MyBookView
     public void onBindViewHolder(@NonNull MyBookViewHolder holder, int position) {
         MyBook myBook = books.get(position);
 
-        holder.myBookPercent.setText(myBook.bookPercent);
 
         Glide.with(holder.itemView.getContext()).load(myBook.bookImage).into(holder.myBookIv);
 
@@ -56,6 +62,8 @@ public class MyBookAdapter extends RecyclerView.Adapter<MyBookAdapter.MyBookView
         return books.size();
     }
 
+    public abstract void onItemClick(int position);
+
     public class MyBookViewHolder extends RecyclerView.ViewHolder{
 
         TextView myBookPercent;
@@ -64,8 +72,15 @@ public class MyBookAdapter extends RecyclerView.Adapter<MyBookAdapter.MyBookView
         public MyBookViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            myBookPercent = itemView.findViewById(R.id.my_book_percent);
             myBookIv = itemView.findViewById(R.id.my_book_iv);
         }
+
+        public void bind(String imagePath) {
+            // Загрузите изображение по указанному пути и установите его в ImageView
+            Glide.with(itemView.getContext())
+                    .load(imagePath)
+                    .into(myBookIv);
+        }
+
     }
 }

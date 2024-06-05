@@ -8,18 +8,43 @@
     android:background="@color/light_brown"
     tools:context=".Activities.SignUpActivity">
 
-    <include
-        android:id="@+id/include"
-        layout="@layout/appbar" />
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:backgroundTint="@color/dark_brown"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/arrow_back"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:src="@drawable/ic_action_name" />
+
+        <TextView
+            android:id="@+id/toolbar_reading_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sign_up1"
+            android:layout_gravity="center"
+            android:textColor="@color/black"
+            android:textSize="24sp" />
+
+    </androidx.appcompat.widget.Toolbar>
+
 
     <EditText
         android:id="@+id/email"
         android:layout_width="300dp"
         android:layout_height="70dp"
-        android:layout_marginTop="24dp"
-        android:hint="Email"
+        android:layout_marginTop="8dp"
+        android:hint="@string/email"
         android:inputType="text"
         app:layout_constraintEnd_toEndOf="@+id/user_name"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/user_name"
         app:layout_constraintTop_toBottomOf="@+id/user_name" />
 
@@ -28,7 +53,7 @@
         android:layout_width="300dp"
         android:layout_height="70dp"
         android:layout_marginTop="24dp"
-        android:hint="Пароль"
+        android:hint="@string/password"
         android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="@+id/email"
         app:layout_constraintStart_toStartOf="@+id/email"
@@ -39,7 +64,7 @@
         android:layout_width="300dp"
         android:layout_height="70dp"
         android:layout_marginTop="24dp"
-        android:hint="Повторите пароль"
+        android:hint="@string/repeat_password"
         android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="@+id/password"
         app:layout_constraintStart_toStartOf="@+id/password"
@@ -50,7 +75,7 @@
         android:layout_width="300dp"
         android:layout_height="70dp"
         android:layout_marginTop="24dp"
-        android:hint="Дата рождения"
+        android:hint="@string/date_of_birth"
         android:inputType="date"
         app:layout_constraintEnd_toEndOf="@+id/password_rep"
         app:layout_constraintStart_toStartOf="@+id/password_rep"
@@ -62,7 +87,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:backgroundTint="@color/dark_brown"
-        android:text="Зарегистрироваться"
+        android:text="@string/sign_in_do"
         app:layout_constraintEnd_toEndOf="@+id/birth_day"
         app:layout_constraintStart_toStartOf="@+id/birth_day"
         app:layout_constraintTop_toBottomOf="@+id/birth_day" />
@@ -73,8 +98,8 @@
         android:layout_height="70dp"
         android:layout_marginTop="32dp"
         android:inputType="text"
-        android:hint="Username"
+        android:hint="@string/username"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 </androidx.constraintlayout.widget.ConstraintLayout>

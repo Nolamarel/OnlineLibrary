@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item
         android:id="@+id/main"
-        android:icon="@color/brown"
-        android:title="Главная" />
+        android:icon="@drawable/categories"
+        android:title="@string/sections" />
     <item
         android:id="@+id/library"
-        android:icon="@color/brown"
-        android:title="Мои книги"/>
+        android:icon="@drawable/mybook"
+        android:title="@string/my_books"/>
     <item
         android:id="@+id/reader"
-        android:title="Читалка"
-        android:icon="@color/brown"/>
+        android:title="@string/reader"
+        android:icon="@drawable/reading"/>
     <item
         android:id="@+id/search"
-        android:title="Поиск"
-        android:icon="@color/brown"/>
+        android:title="@string/search"
+        android:icon="@drawable/search"/>
     <item
         android:id="@+id/profile"
-        android:icon="@color/brown"
-        android:title="Профиль"/>
+        android:icon="@drawable/profile"
+        android:title="@string/profile"/>
 </menu>

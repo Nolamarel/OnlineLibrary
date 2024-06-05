@@ -3,31 +3,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding = "16dp"
+    android:background="@color/light_brown"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".Fragments.BookDescriptionFragment"
-    android:padding="16dp">
+    tools:context=".Fragments.BookDescriptionFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:background="@android:color/transparent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
+            <ImageView
+                android:id="@+id/arrow_back"
+                android:layout_width="25dp"
+                android:layout_marginLeft="10dp"
+                android:layout_height="25dp"
+                android:src="@drawable/ic_action_name" />
 
             <androidx.cardview.widget.CardView
-                android:layout_width="200dp"
-                android:layout_height="200dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
+                app:cardBackgroundColor="@android:color/transparent"
                 android:layout_gravity="center"
                 app:layout_collapseMode="parallax">
 
                 <ImageView
                     android:id="@+id/book_iv"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
                     android:src="@drawable/peace"/>
             </androidx.cardview.widget.CardView>
 
@@ -66,20 +77,21 @@
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
             android:textSize="18sp"
-            android:text="Скачать"
+            android:text="@string/download"
             android:backgroundTint="@color/dark_brown"
             android:layout_marginBottom="16dp"/>
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
             <TextView
                 android:id="@+id/book_desc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:text="@string/large_text"/>
+                android:text=""/>
         </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

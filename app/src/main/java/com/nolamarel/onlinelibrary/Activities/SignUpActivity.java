@@ -1,5 +1,6 @@
 package com.nolamarel.onlinelibrary.Activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -22,7 +23,7 @@ import java.util.HashMap;
 
 public class SignUpActivity extends AppCompatActivity {
     private ActivitySignUpBinding binding;
-    private Toolbar toolbar;
+    Activity activity;
     private String email, password, repPassword, userName;
 
     @Override
@@ -31,10 +32,13 @@ public class SignUpActivity extends AppCompatActivity {
 
         binding = ActivitySignUpBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        toolbar = findViewById(R.id.myToolbar);
-        setSupportActionBar(toolbar);
-        setTitle("Sign Up");
+        activity = this;
+        binding.arrowBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.finish();
+            }
+        });
 
         binding.signUpBt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,6 +54,8 @@ public class SignUpActivity extends AppCompatActivity {
                             if (task.isSuccessful()){
                                 HashMap<String, String > userInfo = new HashMap<>();
                                 userInfo.put("email", email);
+                                userInfo.put("profileImage", "");
+                                userInfo.put("books", "");
                                 userInfo.put("username", userName);
                                 FirebaseDatabase.getInstance().getReference().child("Users").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
                                         .setValue(userInfo).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -62,6 +68,9 @@ public class SignUpActivity extends AppCompatActivity {
                                                 }
                                             }
                                         });
+                                HashMap<String, String > userRole = new HashMap<>();
+                                userRole.put("role", "user");
+                                FirebaseDatabase.getInstance().getReference().child("Roles").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(userRole);
                             }
                         }
                     });

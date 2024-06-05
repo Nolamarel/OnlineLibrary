@@ -1,18 +1,23 @@
 [versions]
-agp = "8.3.1"
-firebaseBom = "32.8.0"
+agp = "8.3.2"
+firebaseBom = "33.0.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 appcompat = "1.6.1"
-material = "1.11.0"
-activity = "1.8.0"
+material = "1.12.0"
+activity = "1.9.0"
 constraintlayout = "2.1.4"
-firebaseAuth = "22.3.1"
+firebaseAuth = "23.0.0"
 design = "28.0.0"
 gs = "4.4.1"
-firebaseDatabase = "20.3.1"
+firebaseDatabase = "21.0.0"
 glide = "4.16.0"
+firebaseStorage = "21.0.0"
+core = "1.13.1"
+androidPdfViewer = "3.2.0-beta.1"
+firebaseAdmin = "30.2.0"
+
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -27,6 +32,13 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 design = {group = "com.android.support", name = "design", version.ref = "design"}
 firebase-database = {group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase"}
 glide = {group = "com.github.bumptech.glide", name = "glide", version.ref = "glide"}
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+core = { group = "androidx.core", name = "core", version.ref = "core" }
+android-pdf-viewer={group = "com.github.barteksc", name = "android-pdf-viewer", version.ref = "androidPdfViewer"}
+
+
+
+
 
 
 

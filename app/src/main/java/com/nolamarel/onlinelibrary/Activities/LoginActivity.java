@@ -47,6 +47,8 @@ private String password;
                 password = binding.passwordEt.getText().toString();
                 if(email.isEmpty() || password.isEmpty()){
                     Toast.makeText(LoginActivity.this, "This fields can't be empty", Toast.LENGTH_SHORT).show();
+                } else if (password.length() < 8) {
+                    Toast.makeText(LoginActivity.this, "Password too short", Toast.LENGTH_SHORT).show();
                 } else{
                     FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
                             .addOnCompleteListener(new OnCompleteListener<AuthResult>() {

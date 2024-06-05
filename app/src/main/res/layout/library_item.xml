@@ -3,24 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:padding="4dp"
+    android:background="@android:color/transparent"
     android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/my_book_iv"
         android:layout_width="150dp"
+        android:layout_marginTop="16dp"
         android:layout_height="250dp"
         android:src="@drawable/martin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/my_book_percent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="100%"
-        android:layout_marginTop="8dp"
-        app:layout_constraintStart_toStartOf="@+id/my_book_iv"
-        app:layout_constraintTop_toBottomOf="@+id/my_book_iv" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,14 +8,34 @@
     android:background="@color/light_brown"
     tools:context=".Activities.LoginActivity">
 
-    <include layout="@layout/appbar" />
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:backgroundTint="@color/dark_brown"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/toolbar_reading_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sign_in"
+            android:layout_gravity="center"
+            android:textColor="@color/black"
+            android:textSize="24sp" />
+
+    </androidx.appcompat.widget.Toolbar>
 
     <EditText
         android:id="@+id/email_et"
         android:layout_width="250dp"
         android:layout_height="50dp"
         android:layout_marginTop="60dp"
-        android:hint="Адрес почты"
+        android:paddingStart="8dp"
+        android:hint="@string/email"
         android:inputType="text"
         app:layout_constraintEnd_toEndOf="@+id/main_books_iv"
         app:layout_constraintStart_toStartOf="@+id/main_books_iv"
@@ -26,7 +46,8 @@
         android:layout_width="250dp"
         android:layout_height="50dp"
         android:layout_marginTop="24dp"
-        android:hint="Пароль"
+        android:paddingStart="8dp"
+        android:hint="@string/password"
         android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="@+id/email_et"
         app:layout_constraintStart_toStartOf="@+id/email_et"
@@ -36,43 +57,37 @@
         android:id="@+id/main_books_iv"
         android:layout_width="252dp"
         android:layout_height="242dp"
-        android:layout_marginTop="90dp"
+        android:layout_marginTop="45dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
         app:srcCompat="@drawable/books" />
 
-    <TextView
-        android:id="@+id/no_account"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="70dp"
-        android:layout_marginBottom="32dp"
-        android:text="Еще нет аккаунта?"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/sign_up"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="70dp"
-        android:layout_marginBottom="32dp"
-        android:text="Зарегистрироваться"
-        android:textColor="@color/dark_brown"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/no_account" />
+        app:layout_constraintStart_toStartOf="parent">
 
-    <TextView
-        android:id="@+id/forgot_pas"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Забыли пароль?"
-        app:layout_constraintEnd_toEndOf="@+id/sign_in_button"
-        app:layout_constraintStart_toStartOf="@+id/sign_in_button"
-        app:layout_constraintTop_toBottomOf="@+id/sign_in_button" />
+        <TextView
+            android:id="@+id/no_account"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/you_dont_have_an_account_yet" />
+
+        <TextView
+            android:id="@+id/sign_up"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dp"
+            android:text="@string/sign_in_do"
+            android:textColor="@color/dark_brown" />
+    </LinearLayout>
 
     <Button
         android:id="@+id/sign_in_button"
@@ -80,7 +95,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:backgroundTint="@color/dark_brown"
-        android:text="Войти"
+        android:text="@string/sign_in_btn"
         app:layout_constraintEnd_toEndOf="@+id/password_et"
         app:layout_constraintStart_toStartOf="@+id/password_et"
         app:layout_constraintTop_toBottomOf="@+id/password_et" />
