@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.design)
     implementation (libs.glide)
     implementation (libs.core)
+    implementation("com.github.alamin5g:Alamin5G-PDF-Viewer:1.0.15")
 
 
     implementation(libs.retrofit2)

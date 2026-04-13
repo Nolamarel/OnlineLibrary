@@ -2,9 +2,14 @@ package com.nolamarel.onlinelibrary
 
 import com.nolamarel.onlinelibrary.Adapters.books.Book
 import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookDTO
+import com.nolamarel.onlinelibrary.network.MessageResponse
+import com.nolamarel.onlinelibrary.network.UpdateProgressRequest
 import retrofit2.Call
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -30,4 +35,12 @@ interface ServerApi {
 
     @GET("user/{id}")
     suspend fun getUserById(@Path("id") id: String): Response<UserDTO>
+
+    @PATCH("my-books/{bookId}/progress")
+    suspend fun updateReadingProgress(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: String,
+        @Body body: UpdateProgressRequest
+    ): Response<MessageResponse>
+
 }
