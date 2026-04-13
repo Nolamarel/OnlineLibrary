@@ -1,38 +1,23 @@
-package com.nolamarel.onlinelibrary.Fragments;
+package com.nolamarel.onlinelibrary.Fragments
 
-import android.graphics.Color;
-import android.os.Bundle;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import com.nolamarel.onlinelibrary.databinding.FragmentAboutAppBinding
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
+class AboutAppFragment : Fragment() {
+    private var binding: FragmentAboutAppBinding? = null
 
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = FragmentAboutAppBinding.inflate(inflater, container, false)
 
-import com.nolamarel.onlinelibrary.Fragments.BooksFragment;
-import com.nolamarel.onlinelibrary.databinding.FragmentAboutAppBinding;
+        binding!!.arrowBack.setOnClickListener { parentFragmentManager.popBackStack() }
 
-public class AboutAppFragment extends Fragment {
-    private FragmentAboutAppBinding binding;
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        binding = FragmentAboutAppBinding.inflate(inflater, container, false);
-
-        binding.arrowBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getParentFragmentManager().popBackStack();
-            }
-        });
-
-        return binding.getRoot();
+        return binding!!.root
     }
 }

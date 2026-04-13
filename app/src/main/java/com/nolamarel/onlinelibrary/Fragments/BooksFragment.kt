@@ -1,94 +1,88 @@
-package com.nolamarel.onlinelibrary.Fragments;
+package com.nolamarel.onlinelibrary.Fragments
 
-import android.os.Bundle;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.Firebase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
+import com.nolamarel.onlinelibrary.Adapters.books.Book
+import com.nolamarel.onlinelibrary.Adapters.books.BookAdapter
+import com.nolamarel.onlinelibrary.BookDTO
+import com.nolamarel.onlinelibrary.OnItemClickListener
+import com.nolamarel.onlinelibrary.OnItemClickListener.ItemClickListener
+import com.nolamarel.onlinelibrary.R
+import com.nolamarel.onlinelibrary.RetrofitInstance
+import com.nolamarel.onlinelibrary.databinding.FragmentBooksBinding
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
+class BooksFragment : Fragment() {
+    private lateinit var binding: FragmentBooksBinding
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentBooksBinding.inflate(inflater, container, false)
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.nolamarel.onlinelibrary.OnItemClickListener;
-import com.nolamarel.onlinelibrary.R;
-import com.nolamarel.onlinelibrary.Adapters.books.Book;
-import com.nolamarel.onlinelibrary.Adapters.books.BookAdapter;
-import com.nolamarel.onlinelibrary.databinding.FragmentBooksBinding;
+        binding.arrowBack.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
 
-import java.util.ArrayList;
+        val sectionId = arguments?.getString("sectionId") ?: ""
+        val sectionName = arguments?.getString("sectionName") ?: ""
 
-public class BooksFragment extends Fragment{
-    private FragmentBooksBinding binding;
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        binding = FragmentBooksBinding.inflate(inflater, container, false);
+        loadBooks(sectionId, sectionName)
 
-        binding.arrowBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getParentFragmentManager().popBackStack();
-            }
-        });
-
-        String sectionId = getArguments().getString("sectionId");
-        loadBooks(sectionId);
-
-        return binding.getRoot();
+        return binding.root
     }
 
-    private void loadBooks(String sectionId){
-        ArrayList<Book> books = new ArrayList<>();
+    private fun loadBooks(sectionId: String, sectionName: String) {
+        RetrofitInstance.serverApi.getBooksByGenre(sectionId).enqueue(object :
+            Callback<List<BookDTO>> {
+            override fun onResponse(call: Call<List<BookDTO>>, response: Response<List<BookDTO>>) {
+                if (response.isSuccessful) {
+                    val bookDTOs = response.body() ?: emptyList()
+                    val books = ArrayList(bookDTOs.map {
+                        Book(it.id, it.author, it.title, it.image)
+                    })
 
-        FirebaseDatabase.getInstance().getReference().addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    binding.sectionName.text = "$sectionName"
 
-                if(snapshot.child("genres").child(sectionId).child("books").getValue() != null){
-                    binding.sectionName.setText(snapshot.child("genres").child(sectionId).child("name").getValue().toString());
-                    String booksStr = snapshot.child("genres").child(sectionId).child("books").getValue().toString();
-                    String[] booksIds = booksStr.split(",");
-
-                    for (String bookId : booksIds){
-                        DataSnapshot bookSnapshot = snapshot.child("Books").child(bookId);
-
-                        String bookName = bookSnapshot.child("name").getValue().toString();
-                        String bookAuthor = bookSnapshot.child("author").getValue().toString();
-                        String myBookId = bookSnapshot.getKey().toString();
-                        String bookImage = bookSnapshot.child("image").getValue().toString();
-
-
-                        books.add(new Book(myBookId, bookAuthor, bookName, bookImage));
-
-                    }
-
-                    binding.booksRv.setLayoutManager(new LinearLayoutManager(getContext()));
-                binding.booksRv.setAdapter(new BookAdapter(books, new OnItemClickListener.ItemClickListener() {
-                    @Override
-                    public void onItemClick(int position) {
-                        String selectedBookId = books.get(position).getBookId();
-                        Fragment fragment = new BookDescriptionFragment();
-                        Bundle args = new Bundle();
-                        args.putString("bookId", selectedBookId);
-
-                        fragment.setArguments(args);
-                        getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).addToBackStack(null).commit();
-                    }
-                }));
-
+                    binding.booksRv.layoutManager = LinearLayoutManager(context)
+                    binding.booksRv.adapter = BookAdapter(books, object : OnItemClickListener.ItemClickListener {
+                        override fun onItemClick(position: Int) {
+                            val selectedBookId = books[position].bookId
+                            val fragment = BookDescriptionFragment().apply {
+                                arguments = Bundle().apply {
+                                    putString("bookId", selectedBookId)
+                                }
+                            }
+                            parentFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_container, fragment)
+                                .addToBackStack(null)
+                                .commit()
+                        }
+                    })
+                } else {
+                    Toast.makeText(context, "Ошибка загрузки книг", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
+            override fun onFailure(call: Call<List<BookDTO>>, t: Throwable) {
+                Toast.makeText(context, "Ошибка подключения к серверу", Toast.LENGTH_SHORT).show()
             }
-        });
+        })
     }
 }
 

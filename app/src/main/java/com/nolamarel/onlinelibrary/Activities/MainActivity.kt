@@ -1,90 +1,145 @@
-package com.nolamarel.onlinelibrary.Activities;
+package com.nolamarel.onlinelibrary.Activities
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.nolamarel.onlinelibrary.App
+import com.nolamarel.onlinelibrary.Fragments.bottomnav.library.LibraryFragment
+import com.nolamarel.onlinelibrary.Fragments.bottomnav.main.MainFragment
+import com.nolamarel.onlinelibrary.Fragments.bottomnav.profile.ProfileFragment
+import com.nolamarel.onlinelibrary.Fragments.bottomnav.search.SearchFragment
+import com.nolamarel.onlinelibrary.R
+import com.nolamarel.onlinelibrary.databinding.ActivityMainBinding
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+//class MainActivity : AppCompatActivity() {
+//    private var binding: ActivityMainBinding? = null
+//    private var mAuth: FirebaseAuth? = null
+//    private var user: FirebaseUser? = null
+//    private var context: Context? = null
+//
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//
+//        binding = ActivityMainBinding.inflate(layoutInflater)
+//        setContentView(binding!!.root)
+//
+//        mAuth = FirebaseAuth.getInstance()
+//        context = this
+//
+//        mAuth!!.addAuthStateListener { firebaseAuth ->
+//            user = firebaseAuth.currentUser
+//            if (user == null) {
+//                startActivity(Intent(this@MainActivity, LoginActivity::class.java))
+//            }
+//        }
+//
+//        // Восстанавливаем выбранный пункт нижнего меню, если есть
+//        val selectedItemId = savedInstanceState?.getInt("selected_item") ?: R.id.main
+//        binding!!.bottonNav.selectedItemId = selectedItemId
+//
+//// Только если activity создаётся впервые — загружаем фрагмент
+//        if (savedInstanceState == null) {
+//            when (selectedItemId) {
+//                R.id.main -> replaceFragment(MainFragment())
+//                R.id.profile -> replaceFragment(ProfileFragment())
+//                R.id.library -> replaceFragment(LibraryFragment())
+//                R.id.search -> replaceFragment(SearchFragment())
+//            }
+//        }
+//
+//        // Обработка нажатий в нижнем меню
+//        binding!!.bottonNav.setOnItemSelectedListener { item: MenuItem ->
+//            when (item.itemId) {
+//                R.id.main -> replaceFragment(MainFragment())
+//                R.id.profile -> replaceFragment(ProfileFragment())
+//                R.id.reader -> {
+//                    val intent = Intent(this@MainActivity, ReadingActivity::class.java)
+//                    startActivity(intent)
+//                }
+//                R.id.library -> replaceFragment(LibraryFragment())
+//                R.id.search -> replaceFragment(SearchFragment())
+//            }
+//            true
+//        }
+//    }
+//
+//    // Сохраняем выбранный пункт нижнего меню при повороте экрана
+//    override fun onSaveInstanceState(outState: Bundle) {
+//        super.onSaveInstanceState(outState)
+//        outState.putInt("selected_item", binding!!.bottonNav.selectedItemId)
+//    }
+//
+//    private fun replaceFragment(fragment: Fragment) {
+//        val fragmentManager = supportFragmentManager
+//        val fragmentTransaction = fragmentManager.beginTransaction()
+//        fragmentTransaction.replace(R.id.fragment_container, fragment)
+//        fragmentTransaction.commit()
+//    }
+//}
 
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.FirebaseUser;
-import com.nolamarel.onlinelibrary.Fragments.bottomnav.library.LibraryFragment;
-import com.nolamarel.onlinelibrary.Fragments.bottomnav.main.MainFragment;
-import com.nolamarel.onlinelibrary.Fragments.bottomnav.search.SearchFragment;
-import com.nolamarel.onlinelibrary.Fragments.bottomnav.profile.ProfileFragment;
-import com.nolamarel.onlinelibrary.R;
-import com.nolamarel.onlinelibrary.databinding.ActivityMainBinding;
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
 
-import java.util.Collections;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-public class MainActivity extends AppCompatActivity {
-    private ActivityMainBinding binding;
-    private FirebaseAuth mAuth;
-    private FirebaseUser user;
-    private Context context;
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        // 🔑 Проверка: если токена нет — открываем LoginActivity
+        val sharedPref = getSharedPreferences("auth", Context.MODE_PRIVATE)
+        val token = sharedPref.getString("token", null)
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        replaceFragment(new MainFragment());
+        if (token == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish() // закрываем MainActivity, чтобы нельзя было вернуться назад
+            return
+        }
 
+        // Восстановление выбранного пункта нижнего меню
+        val selectedItemId = savedInstanceState?.getInt("selected_item") ?: R.id.main
+        binding.bottonNav.selectedItemId = selectedItemId
 
+        // Загрузка фрагмента при первом запуске
+        if (savedInstanceState == null) {
+            when (selectedItemId) {
+                R.id.main -> replaceFragment(MainFragment())
+                R.id.profile -> replaceFragment(ProfileFragment())
+                R.id.library -> replaceFragment(LibraryFragment())
+                R.id.search -> replaceFragment(SearchFragment())
+            }
+        }
 
-        mAuth = FirebaseAuth.getInstance();
-        context = this;
-
-        mAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                user = firebaseAuth.getCurrentUser();
-                if (user == null){
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+        // Обработка нажатий нижнего меню
+        binding.bottonNav.setOnItemSelectedListener { item: MenuItem ->
+            when (item.itemId) {
+                R.id.main -> replaceFragment(MainFragment())
+                R.id.profile -> replaceFragment(ProfileFragment())
+                R.id.reader -> {
+                    val intent = Intent(this, ReadingActivity::class.java)
+                    startActivity(intent)
                 }
+                R.id.library -> replaceFragment(LibraryFragment())
+                R.id.search -> replaceFragment(SearchFragment())
             }
-        });
-
-
-
-
-        binding.bottonNav.setOnItemSelectedListener(item -> {
-
-            if (item.getItemId() == R.id.main) {
-                replaceFragment(new MainFragment());
-            } else if (item.getItemId() == R.id.profile) {
-                replaceFragment(new ProfileFragment());
-            }
-            else if (item.getItemId() == R.id.reader) {
-                Intent intent = new Intent(MainActivity.this, ReadingActivity.class);
-                startActivity(intent);
-
-            } else if (item.getItemId() == R.id.library) {
-                replaceFragment(new LibraryFragment());
-            } else if (item.getItemId() == R.id.search) {
-                replaceFragment(new SearchFragment());
-            }
-            return true;
-
-        });
+            true
+        }
     }
 
-
-    private void replaceFragment(Fragment fragment){
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragment_container, fragment);
-        fragmentTransaction.commit();
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("selected_item", binding.bottonNav.selectedItemId)
     }
 
-
+    private fun replaceFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .commit()
+    }
 }

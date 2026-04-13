@@ -1,86 +1,64 @@
-package com.nolamarel.onlinelibrary.Adapters.myBooks;
+package com.nolamarel.onlinelibrary.Adapters.myBooks
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.nolamarel.onlinelibrary.Adapters.myBooks.MyBookAdapter.MyBookViewHolder
+import com.nolamarel.onlinelibrary.OnItemClickListener.ItemClickListener
+import com.nolamarel.onlinelibrary.R
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+abstract class MyBookAdapter : RecyclerView.Adapter<MyBookViewHolder> {
+    private var books: List<MyBook> = ArrayList()
+    private var listener: ItemClickListener? = null
 
-import com.bumptech.glide.Glide;
-import com.nolamarel.onlinelibrary.OnItemClickListener;
-import com.nolamarel.onlinelibrary.R;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public abstract class MyBookAdapter extends RecyclerView.Adapter<MyBookAdapter.MyBookViewHolder> {
-    private List<MyBook> books = new ArrayList<>();
-    private OnItemClickListener.ItemClickListener listener;
-
-    public MyBookAdapter(List<MyBook> books, OnItemClickListener.ItemClickListener listener) {
-        this.books = books;
-        this.listener = listener;
+    constructor(books: List<MyBook>, listener: ItemClickListener?) {
+        this.books = books
+        this.listener = listener
     }
 
-    public MyBookAdapter(ArrayList<MyBook> books) {
-        this.books = books;
+    constructor(books: ArrayList<MyBook>) {
+        this.books = books
     }
 
-    @NonNull
-    @Override
-    public MyBookViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-       View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.library_item, parent, false);
-        return new MyBookAdapter.MyBookViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyBookViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.library_item, parent, false)
+        return MyBookViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull MyBookViewHolder holder, int position) {
-        MyBook myBook = books.get(position);
+    override fun onBindViewHolder(holder: MyBookViewHolder, position: Int) {
+        val myBook = books[position]
 
 
-        Glide.with(holder.itemView.getContext()).load(myBook.bookImage).into(holder.myBookIv);
+        Glide.with(holder.itemView.context).load(myBook.bookImage).into(holder.myBookIv)
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int clickedPosition = holder.getAdapterPosition();
-                if(clickedPosition != RecyclerView.NO_POSITION){
-                    listener.onItemClick(clickedPosition);
-                }
+        holder.itemView.setOnClickListener {
+            val clickedPosition = holder.adapterPosition
+            if (clickedPosition != RecyclerView.NO_POSITION) {
+                listener!!.onItemClick(clickedPosition)
             }
-        });
-    }
-
-
-    @Override
-    public int getItemCount() {
-        return books.size();
-    }
-
-    public abstract void onItemClick(int position);
-
-    public class MyBookViewHolder extends RecyclerView.ViewHolder{
-
-        TextView myBookPercent;
-        ImageView myBookIv;
-
-        public MyBookViewHolder(@NonNull View itemView) {
-            super(itemView);
-
-            myBookIv = itemView.findViewById(R.id.my_book_iv);
         }
+    }
 
-        public void bind(String imagePath) {
+
+    override fun getItemCount(): Int {
+        return books.size
+    }
+
+    abstract fun onItemClick(position: Int)
+
+    inner class MyBookViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        var myBookPercent: TextView? = null
+        var myBookIv: ImageView = itemView.findViewById(R.id.my_book_iv)
+
+        fun bind(imagePath: String?) {
             // Загрузите изображение по указанному пути и установите его в ImageView
-            Glide.with(itemView.getContext())
-                    .load(imagePath)
-                    .into(myBookIv);
+            Glide.with(itemView.context)
+                .load(imagePath)
+                .into(myBookIv)
         }
-
     }
 }

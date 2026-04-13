@@ -1,41 +1,34 @@
-package com.nolamarel.onlinelibrary;
+package com.nolamarel.onlinelibrary
 
-import android.content.Context;
-import android.content.res.Configuration;
-import android.content.res.Resources;
+import android.content.Context
+import android.content.res.Configuration
+import java.util.Locale
 
-import java.util.Locale;
+class LocalizationManager(private val context: Context) {
+    var currentLanguage: String
+        private set
 
-public class LocalizationManager {
-    private String currentLanguage;
-    private Context context;
-
-    public LocalizationManager(Context context) {
-        this.context = context;
-        currentLanguage = Locale.getDefault().getLanguage(); // Получить текущий язык по умолчанию
+    init {
+        currentLanguage = Locale.getDefault().language // Получить текущий язык по умолчанию
     }
 
-    public void setLanguage(String language) {
-        currentLanguage = language;
-        updateLanguage();
+    fun setLanguage(language: String) {
+        currentLanguage = language
+        updateLanguage()
     }
 
-    public String getString(int resId) {
-        Resources resources = context.getResources();
-        Configuration configuration = new Configuration(resources.getConfiguration());
-        configuration.setLocale(new Locale(currentLanguage));
-        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
-        return resources.getString(resId);
+    fun getString(resId: Int): String {
+        val resources = context.resources
+        val configuration = Configuration(resources.configuration)
+        configuration.setLocale(Locale(currentLanguage))
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+        return resources.getString(resId)
     }
 
-    public void updateLanguage() {
-        Resources resources = context.getResources();
-        Configuration configuration = new Configuration(resources.getConfiguration());
-        configuration.setLocale(new Locale(currentLanguage));
-        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
-    }
-
-    public String getCurrentLanguage() {
-        return currentLanguage;
+    fun updateLanguage() {
+        val resources = context.resources
+        val configuration = Configuration(resources.configuration)
+        configuration.setLocale(Locale(currentLanguage))
+        resources.updateConfiguration(configuration, resources.displayMetrics)
     }
 }

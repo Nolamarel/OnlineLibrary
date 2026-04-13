@@ -1,27 +1,21 @@
-package com.nolamarel.onlinelibrary.Activities;
+package com.nolamarel.onlinelibrary.Activities
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.View;
+import android.app.Activity
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.nolamarel.onlinelibrary.databinding.ActivityReadingBinding
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+//import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
+//import com.github.barteksc.pdfviewer.util.FitPolicy;
+class ReadingActivity : AppCompatActivity() {
+    private val binding: ActivityReadingBinding? = null
+    private val activity: Activity? = null
 
-import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
-import com.github.barteksc.pdfviewer.util.FitPolicy;
-import com.nolamarel.onlinelibrary.R;
-import com.nolamarel.onlinelibrary.databinding.ActivityReadingBinding;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-import java.io.File;
 
-public class ReadingActivity extends AppCompatActivity {
-    private ActivityReadingBinding binding;
-    private Activity activity;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityReadingBinding.inflate(getLayoutInflater());
+        /*binding = ActivityReadingBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         activity = this;
@@ -55,11 +49,6 @@ public class ReadingActivity extends AppCompatActivity {
             public void onClick(View v) {
                 activity.finish();
             }
-        });
-
-
+        });*/
     }
-
-
-
 }

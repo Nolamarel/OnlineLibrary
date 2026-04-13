@@ -1,8 +1,7 @@
-package com.nolamarel.onlinelibrary;
+package com.nolamarel.onlinelibrary
 
-public class OnItemClickListener {
-
-    public interface ItemClickListener {
-        void onItemClick(int position);
+class OnItemClickListener {
+    interface ItemClickListener {
+        fun onItemClick(position: Int)
     }
 }

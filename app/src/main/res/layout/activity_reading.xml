@@ -36,11 +36,11 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.github.barteksc.pdfviewer.PDFView
+    <!--<com.github.barteksc.pdfviewer.PDFView
         android:id="@+id/pdfView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>-->
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout >

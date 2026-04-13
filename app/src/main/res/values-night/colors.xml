@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color> <!-- Остаётся как есть -->
+    <color name="white">#FFFFFFFF</color> <!-- Остаётся как есть -->
+    <color name="light_brown">#3E2F23</color>     <!-- Было: #EADDCA -->
+    <color name="light_brown1">#4A3A2D</color>    <!-- Было: #DBC9AD -->
+    <color name="brown">#5C4430</color>          <!-- Было: #C8A87A -->
+    <color name="dark_brown">#6A543A</color>     <!-- Было: #816D4F -->
+    <color name="grey">#B0B8BD</color>           <!-- Светло-серый на тёмном фоне -->
+    <color name="red">#FF5C5C</color>            <!-- Более заметный акцент на тёмном фоне -->
+</resources>

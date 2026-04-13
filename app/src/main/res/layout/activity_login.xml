@@ -30,12 +30,12 @@
     </androidx.appcompat.widget.Toolbar>
 
     <EditText
-        android:id="@+id/email_et"
+        android:id="@+id/login_et"
         android:layout_width="250dp"
         android:layout_height="50dp"
         android:layout_marginTop="60dp"
         android:paddingStart="8dp"
-        android:hint="@string/email"
+        android:hint="Логин"
         android:inputType="text"
         app:layout_constraintEnd_toEndOf="@+id/main_books_iv"
         app:layout_constraintStart_toStartOf="@+id/main_books_iv"
@@ -49,9 +49,9 @@
         android:paddingStart="8dp"
         android:hint="@string/password"
         android:inputType="textPassword"
-        app:layout_constraintEnd_toEndOf="@+id/email_et"
-        app:layout_constraintStart_toStartOf="@+id/email_et"
-        app:layout_constraintTop_toBottomOf="@+id/email_et" />
+        app:layout_constraintEnd_toEndOf="@+id/login_et"
+        app:layout_constraintStart_toStartOf="@+id/login_et"
+        app:layout_constraintTop_toBottomOf="@+id/login_et" />
 
     <ImageView
         android:id="@+id/main_books_iv"

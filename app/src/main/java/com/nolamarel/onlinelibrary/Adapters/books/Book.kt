@@ -1,80 +1,26 @@
-package com.nolamarel.onlinelibrary.Adapters.books;
+package com.nolamarel.onlinelibrary.Adapters.books
 
-import android.widget.ImageView;
+import com.google.gson.annotations.SerializedName
 
-import java.util.List;
+data class Book(
+    @SerializedName("id")
+    val bookId: String,
 
-public class Book {
-    public String bookId, bookAuthor, bookName, bookImage, bookGenre, bookDesc, bookContent;
+    @SerializedName("author")
+    val bookAuthor: String,
 
-    public Book(String bookId, String bookAuthor, String bookName, String bookImage) {
-        this.bookId = bookId;
-        this.bookAuthor = bookAuthor;
-        this.bookName = bookName;
-        this.bookImage = bookImage;
-    }
+    @SerializedName("title")
+    val bookName: String,
 
-    public Book(String bookId, String bookAuthor, String bookName, String bookImage, String bookContent) {
-        this.bookId = bookId;
-        this.bookAuthor = bookAuthor;
-        this.bookName = bookName;
-        this.bookImage = bookImage;
-        this.bookContent = bookContent;
-    }
+    @SerializedName("image")
+    val bookImage: String,
 
-    public String getBookContent() {
-        return bookContent;
-    }
+    @SerializedName("genreId")
+    val bookGenre: String? = null,
 
-    public void setBookContent(String bookContent) {
-        this.bookContent = bookContent;
-    }
+    @SerializedName("description")
+    val bookDesc: String? = null,
 
-    public String getBookImage() {
-        return bookImage;
-    }
-
-    public String getBookGenre() {
-        return bookGenre;
-    }
-
-    public void setBookGenre(String bookGenre) {
-        this.bookGenre = bookGenre;
-    }
-
-    public String getBookDesc() {
-        return bookDesc;
-    }
-
-    public void setBookDesc(String bookDesc) {
-        this.bookDesc = bookDesc;
-    }
-
-    public void setBookImage(String bookImage) {
-        this.bookImage = bookImage;
-    }
-
-    public String getBookId() {
-        return bookId;
-    }
-
-    public void setBookId(String bookId) {
-        this.bookId = bookId;
-    }
-
-    public String getBookAuthor() {
-        return bookAuthor;
-    }
-
-    public void setBookAuthor(String bookAuthor) {
-        this.bookAuthor = bookAuthor;
-    }
-
-    public String getBookName() {
-        return bookName;
-    }
-
-    public void setBookName(String bookName) {
-        this.bookName = bookName;
-    }
-}
+    @SerializedName("localPath")
+    val bookContent: String? = null
+)

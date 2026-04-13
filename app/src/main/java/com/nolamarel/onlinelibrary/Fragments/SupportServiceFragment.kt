@@ -1,107 +1,86 @@
-package com.nolamarel.onlinelibrary.Fragments;
+package com.nolamarel.onlinelibrary.Fragments
 
-import android.os.Bundle;
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import com.nolamarel.onlinelibrary.databinding.FragmentSupportServiceBinding
 
-import androidx.fragment.app.Fragment;
+class SupportServiceFragment : Fragment() {
+    private var binding: FragmentSupportServiceBinding? = null
+    private var problemText: String? = null
+    private var emailText: String? = null
+    private var messageText: String? = null
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = FragmentSupportServiceBinding.inflate(inflater, container, false)
 
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.Toast;
+        val userId = FirebaseAuth.getInstance().currentUser!!.uid.toString()
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.FirebaseDatabase;
-import com.nolamarel.onlinelibrary.databinding.FragmentSupportServiceBinding;
+        binding!!.arrowBack.setOnClickListener { parentFragmentManager.popBackStack() }
 
-import java.util.HashMap;
-
-public class SupportServiceFragment extends Fragment {
-    private FragmentSupportServiceBinding binding;
-    private String problemText;
-    private String emailText;
-    private String messageText;
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        binding = FragmentSupportServiceBinding.inflate(inflater, container, false);
-
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid().toString();
-
-        binding.arrowBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getParentFragmentManager().popBackStack();
-            }
-        });
-
-        binding.supSerMessageEt.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
+        binding!!.supSerMessageEt.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
             }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                int characterCount = s.length();
-                binding.supSerSymbolNow.setText(String.valueOf(characterCount) + "/20000");
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                val characterCount = s.length
+                binding!!.supSerSymbolNow.text = "$characterCount/20000"
             }
-            @Override
-            public void afterTextChanged(Editable s) {
 
+            override fun afterTextChanged(s: Editable) {
             }
-        });
+        })
 
-        EditText problem = binding.supSerThemeEt;
-        EditText email = binding.supSerEmailEt;
-        EditText message = binding.supSerMessageEt;
+        val problem = binding!!.supSerThemeEt
+        val email = binding!!.supSerEmailEt
+        val message = binding!!.supSerMessageEt
 
-        binding.button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean allFieldsValid = true;
+        binding!!.button.setOnClickListener {
+            var allFieldsValid = true
+            problemText = binding!!.supSerThemeEt.text.toString()
+            emailText = binding!!.supSerEmailEt.text.toString()
+            messageText = binding!!.supSerMessageEt.text.toString()
 
-                problemText = binding.supSerThemeEt.getText().toString();
-                emailText = binding.supSerEmailEt.getText().toString();
-                messageText = binding.supSerMessageEt.getText().toString();
-
-                if (problemText.isEmpty()){
-                    problem.setError("Введите проблему");
-                    allFieldsValid = false;
-                }
-                if (emailText.isEmpty()){
-                    email.setError("Введите адрес электронной почты");
-                    allFieldsValid = false;
-                }
-                if (messageText.length() < 20){
-                    message.setError("Слишком короткое описание");
-                    allFieldsValid = false;
-                }
-
-                if (allFieldsValid) {
-                    sendMessage(userId, problemText, emailText, messageText);
-                    Toast.makeText(getContext(), "Сообщение успешно отправлено", Toast.LENGTH_SHORT).show();
-                }
+            if (problemText!!.isEmpty()) {
+                problem.error = "Введите проблему"
+                allFieldsValid = false
             }
-        });
+            if (emailText!!.isEmpty()) {
+                email.error = "Введите адрес электронной почты"
+                allFieldsValid = false
+            }
+            if (messageText!!.length < 20) {
+                message.error = "Слишком короткое описание"
+                allFieldsValid = false
+            }
+            if (allFieldsValid) {
+                sendMessage(userId, problemText!!, emailText!!, messageText!!)
+                Toast.makeText(context, "Сообщение успешно отправлено", Toast.LENGTH_SHORT).show()
+            }
+        }
 
 
 
 
-        return binding.getRoot();
+        return binding!!.root
     }
 
-    public void sendMessage(String userId, String problemText, String emailText, String messageText){
-        if (userId == null) return;
-        HashMap<String, String> messageInfo = new HashMap<>();
-        messageInfo.put("userId", userId);
-        messageInfo.put("problem", problemText);
-        messageInfo.put("email", emailText);
-        messageInfo.put("message", messageText);
-        FirebaseDatabase.getInstance().getReference().child("Messages").push().setValue(messageInfo);
+    fun sendMessage(userId: String?, problemText: String, emailText: String, messageText: String) {
+        if (userId == null) return
+        val messageInfo = HashMap<String, String>()
+        messageInfo["userId"] = userId
+        messageInfo["problem"] = problemText
+        messageInfo["email"] = emailText
+        messageInfo["message"] = messageText
+        FirebaseDatabase.getInstance().reference.child("Messages").push().setValue(messageInfo)
     }
-
 }

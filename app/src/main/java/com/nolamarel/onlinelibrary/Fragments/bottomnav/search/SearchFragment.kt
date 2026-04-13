@@ -1,138 +1,276 @@
-package com.nolamarel.onlinelibrary.Fragments.bottomnav.search;
+package com.nolamarel.onlinelibrary.Fragments.bottomnav.search
 
-import android.os.Bundle;
+import android.content.Context
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.SearchView
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.nolamarel.onlinelibrary.Adapters.books.Book
+import com.nolamarel.onlinelibrary.Adapters.books.BookAdapter
+import com.nolamarel.onlinelibrary.Adapters.sections.Section
+import com.nolamarel.onlinelibrary.Adapters.sections.SectionAdapter
+import com.nolamarel.onlinelibrary.Fragments.BookDescriptionFragment
+import com.nolamarel.onlinelibrary.Fragments.BooksFragment
+import com.nolamarel.onlinelibrary.OnItemClickListener.ItemClickListener
+import com.nolamarel.onlinelibrary.R
+import com.nolamarel.onlinelibrary.RetrofitInstance
+import com.nolamarel.onlinelibrary.databinding.FragmentSearchBinding
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.util.Locale
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
+class SearchFragment : Fragment() {
+    private var _binding: FragmentSearchBinding? = null
+    private val binding get() = _binding!!
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.SearchView;
+    private var lastSearchQuery: String = ""
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.nolamarel.onlinelibrary.Adapters.books.Book;
-import com.nolamarel.onlinelibrary.Adapters.books.BookAdapter;
-import com.nolamarel.onlinelibrary.Adapters.sections.Section;
-import com.nolamarel.onlinelibrary.Adapters.sections.SectionAdapter;
-import com.nolamarel.onlinelibrary.Fragments.BookDescriptionFragment;
-import com.nolamarel.onlinelibrary.Fragments.BooksFragment;
-import com.nolamarel.onlinelibrary.OnItemClickListener;
-import com.nolamarel.onlinelibrary.R;
-import com.nolamarel.onlinelibrary.databinding.FragmentSearchBinding;
+    private val PREFS_NAME = "search_prefs"
+    private val HISTORY_KEY = "search_history"
+    private val MAX_HISTORY_SIZE = 10
 
-import java.util.ArrayList;
-
-public class SearchFragment extends Fragment {
-private FragmentSearchBinding binding;
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        binding = FragmentSearchBinding.inflate(inflater, container, false);
-
-        //loadSections();
-        binding.serchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                searchBook(newText);
-                return false;
-            }
-        });
-
-        binding.serchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                //loadSections();
-                return false;
-            }
-        });
-
-
-        return binding.getRoot();
+    companion object {
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
     }
 
-    private void searchBook(String newText){
-        ArrayList<Book> books = new ArrayList<>();
+    private val handler = Handler(Looper.getMainLooper())
+    private val searchRunnable = Runnable { searchRequest() }
 
-        FirebaseDatabase.getInstance().getReference().child("Books").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for(DataSnapshot bookSnapshot : snapshot.getChildren()){
-                    if(bookSnapshot.child("name").toString().toLowerCase().contains(newText.toLowerCase()) || bookSnapshot.child("author").toString().toLowerCase().contains(newText.toLowerCase())){
-                        String name = bookSnapshot.child("name").getValue().toString();
-                        String author = bookSnapshot.child("author").getValue().toString();
-                        String image = bookSnapshot.child("image").getValue().toString();
-                        String id = bookSnapshot.getKey().toString();
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSearchBinding.inflate(inflater, container, false)
+        val root = binding.root
 
-                        books.add(new Book(id, author, name, image));
+        val query = savedInstanceState?.getString("search_query") ?: ""
+        binding.serchView.setQuery(query, false)
+
+        binding.serchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                saveSearchQuery(query)
+                searchBook(query)
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                if (newText.isNotEmpty()) {
+                    searchDebounce()
+                } else {
+                    loadSections()
+                }
+                return true
+            }
+        })
+
+        binding.serchView.setOnCloseListener {
+            binding.serchView.setQuery("", false)
+            binding.serchView.clearFocus()
+            loadSections()
+            true
+        }
+
+        binding.serchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                val history = getSearchHistory()
+                if (history.isNotEmpty()) {
+                    showHistory(history)
+                }
+            }
+        }
+
+        binding.clearHistoryButton?.setOnClickListener {
+            val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().remove(HISTORY_KEY).apply()
+            showHistory(emptyList())
+        }
+
+        if (query.isEmpty()) {
+            loadSections()
+        } else {
+            searchBook(query)
+        }
+
+        binding.retryButton?.setOnClickListener {
+            searchBook(lastSearchQuery)
+        }
+
+        return root
+    }
+
+    private fun searchRequest() {
+        val query = binding.serchView.query.toString()
+        if (query.isNotEmpty()) {
+            binding.placeholderError?.visibility = View.GONE
+            binding.placeholderNoResults?.visibility = View.GONE
+            binding.booksRv.visibility = View.GONE
+            binding.progressBar?.visibility = View.VISIBLE
+            handler.postDelayed({
+                searchBook(query)
+            }, 1000)
+        } else {
+            binding.placeholderNoResults?.visibility = View.VISIBLE
+            binding.progressBar?.visibility = View.GONE
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        handler.removeCallbacksAndMessages(null)
+    }
+
+    private fun searchDebounce() {
+        handler.removeCallbacks(searchRunnable)
+        handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("search_query", binding.serchView.query.toString())
+    }
+
+    private fun saveSearchQuery(query: String) {
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val history = prefs.getStringSet(HISTORY_KEY, LinkedHashSet())!!.toMutableList()
+
+        history.remove(query)
+        history.add(0, query)
+
+        if (history.size > MAX_HISTORY_SIZE) {
+            history.removeAt(history.lastIndex)
+        }
+
+        prefs.edit().putStringSet(HISTORY_KEY, history.toSet()).apply()
+    }
+
+    private fun getSearchHistory(): List<String> {
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getStringSet(HISTORY_KEY, emptySet())!!.toList()
+    }
+
+    private fun showHistory(history: List<String>) {
+        val adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+                val view = LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_1, parent, false)
+                return object : RecyclerView.ViewHolder(view) {}
+            }
+
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+                val textView = holder.itemView.findViewById<TextView>(android.R.id.text1)
+                textView.text = history[position]
+                textView.setOnClickListener {
+                    val query = history[position]
+                    binding.serchView.setQuery(query, true)
+                    searchBook(query)
+                }
+            }
+
+            override fun getItemCount(): Int = history.size
+        }
+
+        binding.booksRv.layoutManager = LinearLayoutManager(context)
+        binding.booksRv.adapter = adapter
+    }
+
+    private fun searchBook(query: String) {
+        lastSearchQuery = query
+        saveSearchQuery(query)
+
+        binding.progressBar?.visibility = View.VISIBLE
+        binding.booksRv.visibility = View.GONE
+        binding.placeholderError?.visibility = View.GONE
+        binding.placeholderNoResults?.visibility = View.GONE
+
+        RetrofitInstance.serverApi.searchBooks(query)
+            .enqueue(object : Callback<List<Book>> {
+                override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
+                    binding.progressBar?.visibility = View.GONE
+
+                    val books: List<Book> = response.body() ?: emptyList()
+
+                    if (books.isEmpty()) {
+                        binding.booksRv.visibility = View.GONE
+                        binding.placeholderNoResults?.visibility = View.VISIBLE
+                    } else {
+                        binding.booksRv.visibility = View.VISIBLE
+                        binding.placeholderNoResults?.visibility = View.GONE
+
+                        binding.booksRv.layoutManager = LinearLayoutManager(context)
+                        binding.booksRv.adapter = BookAdapter(
+                            ArrayList(books),
+                            object : ItemClickListener {
+                                override fun onItemClick(position: Int) {
+                                    val selectedBookId = books[position].bookId
+                                    val fragment = BookDescriptionFragment()
+                                    fragment.arguments = Bundle().apply {
+                                        putString("bookId", selectedBookId)
+                                    }
+                                    parentFragmentManager.beginTransaction()
+                                        .replace(R.id.fragment_container, fragment)
+                                        .addToBackStack(null)
+                                        .commit()
+                                }
+                            }
+                        )
                     }
                 }
 
-                binding.booksRv.setLayoutManager(new LinearLayoutManager(getContext()));
-                binding.booksRv.setAdapter(new BookAdapter(books, new OnItemClickListener.ItemClickListener() {
-                    @Override
-                    public void onItemClick(int position) {
-                        String selectedBookId = books.get(position).getBookId();
-                        Fragment fragment = new BookDescriptionFragment();
-                        Bundle args = new Bundle();
-                        args.putString("bookId", selectedBookId);
-                        fragment.setArguments(args);
-                        getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).addToBackStack(null).commit();
-                    }
-                }));
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+                override fun onFailure(call: Call<List<Book>>, t: Throwable) {
+                    binding.progressBar?.visibility = View.GONE
+                    binding.booksRv.visibility = View.GONE
+                    binding.placeholderError?.visibility = View.VISIBLE
+                }
+            })
     }
 
-    private void loadSections(){
-        ArrayList<Section> sections = new ArrayList<>();
-        FirebaseDatabase.getInstance().getReference().child("genres").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for(DataSnapshot sectionSnapshot: snapshot.getChildren()){
-                    String name = sectionSnapshot.child("name").getValue().toString();
-                    String id = sectionSnapshot.getKey().toString();
-                    String sectionImage = sectionSnapshot.child("image").getValue().toString();
+    private fun loadSections() {
+        val sections = ArrayList<Section>()
+        FirebaseDatabase.getInstance().reference.child("genres")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (sectionSnapshot in snapshot.children) {
+                        val name = sectionSnapshot.child("name").value.toString()
+                        val id = sectionSnapshot.key.toString()
+                        val sectionImage = sectionSnapshot.child("image").value.toString()
 
-                    sections.add(new Section(name, sectionImage, id));
+                        sections.add(Section(name, sectionImage, id))
+                    }
+
+                    binding.booksRv.layoutManager = GridLayoutManager(context, 2)
+                    binding.booksRv.adapter = SectionAdapter(sections, object : ItemClickListener {
+                        override fun onItemClick(position: Int) {
+                            val selectedSection = sections[position].sectionId
+                            val fragment: Fragment = BooksFragment()
+                            val args = Bundle()
+                            args.putString("sectionId", selectedSection)
+                            fragment.arguments = args
+                            parentFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_container, fragment).addToBackStack(null)
+                                .commit()
+                        }
+                    })
                 }
 
-                binding.booksRv.setLayoutManager(new GridLayoutManager(getContext(), 2));
-                binding.booksRv.setAdapter(new SectionAdapter(sections, new OnItemClickListener.ItemClickListener() {
-                    @Override
-                    public void onItemClick(int position) {
-                        String selectedSection = sections.get(position).getSectionId();
-                        Log.d("sectionName", selectedSection);
-                        Fragment fragment = new BooksFragment();
-                        Bundle args = new Bundle();
-                        args.putString("sectionId", selectedSection);
-                        fragment.setArguments(args);
-                        getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).addToBackStack(null).commit();
-                    }
-                }));
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+                override fun onCancelled(error: DatabaseError) {}
+            })
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }
