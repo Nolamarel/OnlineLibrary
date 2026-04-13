@@ -6,24 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.firebase.Firebase
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.database
 import com.nolamarel.onlinelibrary.Adapters.books.Book
 import com.nolamarel.onlinelibrary.Adapters.books.BookAdapter
-import com.nolamarel.onlinelibrary.BookDTO
+import com.nolamarel.onlinelibrary.ApiClient
 import com.nolamarel.onlinelibrary.OnItemClickListener
-import com.nolamarel.onlinelibrary.OnItemClickListener.ItemClickListener
 import com.nolamarel.onlinelibrary.R
-import com.nolamarel.onlinelibrary.RetrofitInstance
 import com.nolamarel.onlinelibrary.databinding.FragmentBooksBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.launch
 
 class BooksFragment : Fragment() {
     private lateinit var binding: FragmentBooksBinding
@@ -48,41 +39,42 @@ class BooksFragment : Fragment() {
     }
 
     private fun loadBooks(sectionId: String, sectionName: String) {
-        RetrofitInstance.serverApi.getBooksByGenre(sectionId).enqueue(object :
-            Callback<List<BookDTO>> {
-            override fun onResponse(call: Call<List<BookDTO>>, response: Response<List<BookDTO>>) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.serverApi.getBooksByGenre(sectionId)
+
                 if (response.isSuccessful) {
-                    val bookDTOs = response.body() ?: emptyList()
+                    val bookDTOs = response.body().orEmpty()
                     val books = ArrayList(bookDTOs.map {
                         Book(it.id, it.author, it.title, it.image)
                     })
 
-                    binding.sectionName.text = "$sectionName"
-
+                    binding.sectionName.text = sectionName
                     binding.booksRv.layoutManager = LinearLayoutManager(context)
-                    binding.booksRv.adapter = BookAdapter(books, object : OnItemClickListener.ItemClickListener {
-                        override fun onItemClick(position: Int) {
-                            val selectedBookId = books[position].bookId
-                            val fragment = BookDescriptionFragment().apply {
-                                arguments = Bundle().apply {
-                                    putString("bookId", selectedBookId)
+                    binding.booksRv.adapter = BookAdapter(
+                        books,
+                        object : OnItemClickListener.ItemClickListener {
+                            override fun onItemClick(position: Int) {
+                                val selectedBookId = books[position].bookId
+                                val fragment = BookDescriptionFragment().apply {
+                                    arguments = Bundle().apply {
+                                        putString("bookId", selectedBookId)
+                                    }
                                 }
+                                parentFragmentManager.beginTransaction()
+                                    .replace(R.id.fragment_container, fragment)
+                                    .addToBackStack(null)
+                                    .commit()
                             }
-                            parentFragmentManager.beginTransaction()
-                                .replace(R.id.fragment_container, fragment)
-                                .addToBackStack(null)
-                                .commit()
                         }
-                    })
+                    )
                 } else {
                     Toast.makeText(context, "Ошибка загрузки книг", Toast.LENGTH_SHORT).show()
                 }
-            }
-
-            override fun onFailure(call: Call<List<BookDTO>>, t: Throwable) {
+            } catch (e: Exception) {
+                e.printStackTrace()
                 Toast.makeText(context, "Ошибка подключения к серверу", Toast.LENGTH_SHORT).show()
             }
-        })
+        }
     }
 }
-

@@ -3,7 +3,7 @@ package com.nolamarel.onlinelibrary
 import com.google.gson.annotations.SerializedName
 
 data class LoginRequest(
-    val login: String,
+    val email: String,
     val password: String
 )
 
@@ -16,5 +16,8 @@ data class RegisterRequest(
 
 data class AuthResponse(
     val token: String,
-    @SerializedName("id") val userId: String
+    val userId: Long,
+    val name: String,
+    val email: String,
+    val role: String
 )

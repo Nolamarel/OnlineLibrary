@@ -1,90 +1,262 @@
 package com.nolamarel.onlinelibrary.Fragments.bottomnav.library
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.util.Log
+import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import com.nolamarel.onlinelibrary.Activities.ReadingActivity
-import com.nolamarel.onlinelibrary.Activities.RecentBookContent
-import com.nolamarel.onlinelibrary.Adapters.myBooks.MyBookAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.nolamarel.onlinelibrary.Activities.PdfReaderActivity
 import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookAdapter
-import com.nolamarel.onlinelibrary.OnItemClickListener.ItemClickListener
-import com.nolamarel.onlinelibrary.RetrofitInstance
-import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookDTO
+import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookDto
+import com.nolamarel.onlinelibrary.ApiClient
+import com.nolamarel.onlinelibrary.auth.SessionManager
 import com.nolamarel.onlinelibrary.databinding.FragmentLibraryBinding
+import com.nolamarel.onlinelibrary.network.CreateLocalBookRequest
+import com.nolamarel.onlinelibrary.network.UpdateProgressRequest
 import kotlinx.coroutines.launch
 
 class LibraryFragment : Fragment() {
 
-    private var binding: FragmentLibraryBinding? = null
-    private val books = mutableListOf<UserBookDTO>()
+    private var _binding: FragmentLibraryBinding? = null
+    private val binding get() = _binding!!
+
     private lateinit var adapter: UserBookAdapter
+    private val books = mutableListOf<UserBookDto>()
+
+    private val pickPdfLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                requireContext().contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {
+            }
+
+            uploadLocalPdfToLibrary(uri)
+        }
+    }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentLibraryBinding.inflate(inflater, container, false)
-
-        setupRecyclerView()
-        loadBooksFromServer()
-
-        return binding!!.root
+        _binding = FragmentLibraryBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    private fun setupRecyclerView() {
-        adapter = UserBookAdapter(books, object : ItemClickListener {
-            override fun onItemClick(position: Int) {
-                val book = books[position]
-                val intent = Intent(requireContext(), ReadingActivity::class.java)
-                RecentBookContent.name = book.title
-                RecentBookContent.variable = book.localPath ?: ""
-                startActivity(intent)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupRecycler()
+        loadBooks()
+
+        binding.btnAddPdf.setOnClickListener {
+            pickPdfLauncher.launch(arrayOf("application/pdf"))
+        }
+    }
+
+    private fun setupRecycler() {
+        adapter = UserBookAdapter(
+            items = books,
+            onBookClick = { book ->
+                openBook(book)
             }
-        })
+        )
 
-        binding!!.libraryRv.layoutManager = GridLayoutManager(context, 2)
-        binding!!.libraryRv.adapter = adapter
+        binding.libraryRv.layoutManager = LinearLayoutManager(requireContext())
+        binding.libraryRv.adapter = adapter
     }
 
-    private fun loadBooksFromServer() {
+    private fun loadBooks() {
+        val token = SessionManager(requireContext()).getToken()
+
+        if (token.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Вы не авторизованы", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val bearer = if (token.startsWith("Bearer ")) token else "Bearer $token"
+
         lifecycleScope.launch {
             try {
-                val response = RetrofitInstance.serverApi.getUserBooks()
+                val response = ApiClient.serverApi.getMyBooks(bearer)
 
                 if (response.isSuccessful) {
-                    val bookList = response.body() ?: emptyList()
+                    val body = response.body()
+
                     books.clear()
-                    books.addAll(bookList)
+                    if (body != null) {
+                        books.addAll(body)
+                    }
                     adapter.notifyDataSetChanged()
 
-                    if (bookList.isEmpty()) {
-                        Toast.makeText(requireContext(), "У вас пока нет книг", Toast.LENGTH_SHORT).show()
+                    if (books.isEmpty()) {
+                        Toast.makeText(requireContext(), "Библиотека пуста", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    val errorText = response.errorBody()?.string()
-                    Log.e("LibraryFragment", "Ошибка сервера: ${response.code()} $errorText")
                     Toast.makeText(
                         requireContext(),
-                        "Ошибка загрузки книг: ${response.code()}",
+                        "Ошибка загрузки библиотеки: ${response.code()}",
                         Toast.LENGTH_LONG
                     ).show()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(requireContext(), "Сервер недоступен", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка сети: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
 
+    private fun uploadLocalPdfToLibrary(uri: Uri) {
+        val token = SessionManager(requireContext()).getToken()
+
+        if (token.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Вы не авторизованы", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val bearer = if (token.startsWith("Bearer ")) token else "Bearer $token"
+
+        val fileName = getFileName(uri) ?: "Локальный PDF"
+        val title = fileName.substringBeforeLast(".pdf", fileName)
+        val author = "Неизвестный автор"
+
+        lifecycleScope.launch {
+            try {
+                val createBookResponse = ApiClient.serverApi.createLocalBook(
+                    token = bearer,
+                    body = CreateLocalBookRequest(
+                        title = title,
+                        author = author,
+                        description = "Локально загруженный PDF"
+                    )
+                )
+
+                if (!createBookResponse.isSuccessful || createBookResponse.body() == null) {
+                    val errorText = createBookResponse.errorBody()?.string()
+                    Toast.makeText(
+                        requireContext(),
+                        "Ошибка создания книги: ${createBookResponse.code()} ${errorText ?: ""}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@launch
+                }
+
+                val bookId = createBookResponse.body()!!.bookId
+
+                val addBookResponse = ApiClient.serverApi.addBookToLibrary(
+                    token = bearer,
+                    bookId = bookId.toString()
+                )
+
+                if (!addBookResponse.isSuccessful) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Не удалось добавить книгу в библиотеку",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@launch
+                }
+
+                val progressResponse = ApiClient.serverApi.updateReadingProgress(
+                    token = bearer,
+                    bookId = bookId.toString(),
+                    body = UpdateProgressRequest(
+                        progress = "0.00",
+                        currentPage = 0,
+                        locator = "page_0",
+                        localFilePath = uri.toString(),
+                        fileFormat = "pdf"
+                    )
+                )
+
+                if (!progressResponse.isSuccessful) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Не удалось сохранить путь к файлу",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@launch
+                }
+
+                Toast.makeText(
+                    requireContext(),
+                    "PDF добавлен в библиотеку",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                loadBooks()
+
+                val intent = Intent(requireContext(), PdfReaderActivity::class.java).apply {
+                    putExtra("book_id", bookId)
+                    putExtra("file_uri", uri.toString())
+                }
+                startActivity(intent)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка загрузки PDF: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun getFileName(uri: Uri): String? {
+        val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (it.moveToFirst() && nameIndex >= 0) {
+                return it.getString(nameIndex)
+            }
+        }
+        return null
+    }
+
+    private fun openBook(book: UserBookDto) {
+        val localPath = book.localFilePath
+
+        if (localPath.isNullOrBlank()) {
+            Toast.makeText(
+                requireContext(),
+                "У книги нет локального файла для чтения",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        val intent = Intent(requireContext(), PdfReaderActivity::class.java).apply {
+            putExtra("book_id", book.bookId)
+
+            if (localPath.startsWith("content://")) {
+                putExtra("file_uri", localPath)
+            } else {
+                putExtra("file_path", localPath)
+            }
+        }
+
+        startActivity(intent)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
-        binding = null
+        _binding = null
     }
 }

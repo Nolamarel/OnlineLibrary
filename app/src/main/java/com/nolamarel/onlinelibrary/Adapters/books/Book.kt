@@ -13,7 +13,7 @@ data class Book(
     val bookName: String,
 
     @SerializedName("image")
-    val bookImage: String,
+    val bookImage: String?,
 
     @SerializedName("genreId")
     val bookGenre: String? = null,

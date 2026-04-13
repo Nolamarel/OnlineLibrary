@@ -1,7 +1,7 @@
 package com.nolamarel.onlinelibrary
 
 data class GenreDTO(
-    val id: String,
+    val genreId: String,
     val name: String,
-    val image: String
+    val image: String? = null
 )

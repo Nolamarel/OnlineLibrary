@@ -4,15 +4,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.nolamarel.onlinelibrary.OnItemClickListener
 import com.nolamarel.onlinelibrary.R
 
 class UserBookAdapter(
-    private val books: List<UserBookDTO>,
-    private val listener: OnItemClickListener.ItemClickListener
+    private val items: List<UserBookDto>,
+    private val onBookClick: (UserBookDto) -> Unit
 ) : RecyclerView.Adapter<UserBookAdapter.UserBookViewHolder>() {
 
     inner class UserBookViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -22,7 +20,7 @@ class UserBookAdapter(
             itemView.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    listener.onItemClick(position)
+                    onBookClick(items[position])
                 }
             }
         }
@@ -35,14 +33,14 @@ class UserBookAdapter(
     }
 
     override fun onBindViewHolder(holder: UserBookViewHolder, position: Int) {
-        val book = books[position]
+        val book = items[position]
 
-        // Загрузка изображения обложки
         Glide.with(holder.itemView.context)
-            .load(book.image)
+            .load(book.coverUrl)
+            .placeholder(R.drawable.ic_launcher_foreground)
+            .error(R.drawable.ic_launcher_foreground)
             .into(holder.bookImage)
-
     }
 
-    override fun getItemCount(): Int = books.size
+    override fun getItemCount(): Int = items.size
 }

@@ -4,13 +4,13 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SearchView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,16 +22,13 @@ import com.nolamarel.onlinelibrary.Adapters.books.Book
 import com.nolamarel.onlinelibrary.Adapters.books.BookAdapter
 import com.nolamarel.onlinelibrary.Adapters.sections.Section
 import com.nolamarel.onlinelibrary.Adapters.sections.SectionAdapter
+import com.nolamarel.onlinelibrary.ApiClient
 import com.nolamarel.onlinelibrary.Fragments.BookDescriptionFragment
 import com.nolamarel.onlinelibrary.Fragments.BooksFragment
 import com.nolamarel.onlinelibrary.OnItemClickListener.ItemClickListener
 import com.nolamarel.onlinelibrary.R
-import com.nolamarel.onlinelibrary.RetrofitInstance
 import com.nolamarel.onlinelibrary.databinding.FragmentSearchBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import java.util.Locale
+import kotlinx.coroutines.launch
 
 class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
@@ -165,7 +162,8 @@ class SearchFragment : Fragment() {
     private fun showHistory(history: List<String>) {
         val adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-                val view = LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_1, parent, false)
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(android.R.layout.simple_list_item_1, parent, false)
                 return object : RecyclerView.ViewHolder(view) {}
             }
 
@@ -195,46 +193,48 @@ class SearchFragment : Fragment() {
         binding.placeholderError?.visibility = View.GONE
         binding.placeholderNoResults?.visibility = View.GONE
 
-        RetrofitInstance.serverApi.searchBooks(query)
-            .enqueue(object : Callback<List<Book>> {
-                override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
-                    binding.progressBar?.visibility = View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.serverApi.searchBooks(query)
 
-                    val books: List<Book> = response.body() ?: emptyList()
+                binding.progressBar?.visibility = View.GONE
 
-                    if (books.isEmpty()) {
-                        binding.booksRv.visibility = View.GONE
-                        binding.placeholderNoResults?.visibility = View.VISIBLE
-                    } else {
-                        binding.booksRv.visibility = View.VISIBLE
-                        binding.placeholderNoResults?.visibility = View.GONE
+                val books: List<Book> = response.body()?.map {
+                    Book(it.id, it.author, it.title, it.image)
+                } ?: emptyList()
 
-                        binding.booksRv.layoutManager = LinearLayoutManager(context)
-                        binding.booksRv.adapter = BookAdapter(
-                            ArrayList(books),
-                            object : ItemClickListener {
-                                override fun onItemClick(position: Int) {
-                                    val selectedBookId = books[position].bookId
-                                    val fragment = BookDescriptionFragment()
-                                    fragment.arguments = Bundle().apply {
-                                        putString("bookId", selectedBookId)
-                                    }
-                                    parentFragmentManager.beginTransaction()
-                                        .replace(R.id.fragment_container, fragment)
-                                        .addToBackStack(null)
-                                        .commit()
-                                }
-                            }
-                        )
-                    }
-                }
-
-                override fun onFailure(call: Call<List<Book>>, t: Throwable) {
-                    binding.progressBar?.visibility = View.GONE
+                if (books.isEmpty()) {
                     binding.booksRv.visibility = View.GONE
-                    binding.placeholderError?.visibility = View.VISIBLE
+                    binding.placeholderNoResults?.visibility = View.VISIBLE
+                } else {
+                    binding.booksRv.visibility = View.VISIBLE
+                    binding.placeholderNoResults?.visibility = View.GONE
+
+                    binding.booksRv.layoutManager = LinearLayoutManager(context)
+                    binding.booksRv.adapter = BookAdapter(
+                        ArrayList(books),
+                        object : ItemClickListener {
+                            override fun onItemClick(position: Int) {
+                                val selectedBookId = books[position].bookId
+                                val fragment = BookDescriptionFragment()
+                                fragment.arguments = Bundle().apply {
+                                    putString("bookId", selectedBookId)
+                                }
+                                parentFragmentManager.beginTransaction()
+                                    .replace(R.id.fragment_container, fragment)
+                                    .addToBackStack(null)
+                                    .commit()
+                            }
+                        }
+                    )
                 }
-            })
+            } catch (e: Exception) {
+                e.printStackTrace()
+                binding.progressBar?.visibility = View.GONE
+                binding.booksRv.visibility = View.GONE
+                binding.placeholderError?.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun loadSections() {
@@ -254,12 +254,16 @@ class SearchFragment : Fragment() {
                     binding.booksRv.adapter = SectionAdapter(sections, object : ItemClickListener {
                         override fun onItemClick(position: Int) {
                             val selectedSection = sections[position].sectionId
-                            val fragment: Fragment = BooksFragment()
-                            val args = Bundle()
-                            args.putString("sectionId", selectedSection)
-                            fragment.arguments = args
+                            val selectedSectionName = sections[position].sectionName
+                            val fragment = BooksFragment().apply {
+                                arguments = Bundle().apply {
+                                    putString("sectionId", selectedSection)
+                                    putString("sectionName", selectedSectionName)
+                                }
+                            }
                             parentFragmentManager.beginTransaction()
-                                .replace(R.id.fragment_container, fragment).addToBackStack(null)
+                                .replace(R.id.fragment_container, fragment)
+                                .addToBackStack(null)
                                 .commit()
                         }
                     })
