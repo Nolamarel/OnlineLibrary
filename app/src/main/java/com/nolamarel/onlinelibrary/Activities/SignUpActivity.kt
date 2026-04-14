@@ -16,85 +16,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-//class SignUpActivity : AppCompatActivity() {
-//    private var binding: ActivitySignUpBinding? = null
-//    var activity: Activity? = null
-//    private var email: String? = null
-//    private var password: String? = null
-//    private var repPassword: String? = null
-//    private var userName: String? = null
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        binding = ActivitySignUpBinding.inflate(
-//            layoutInflater
-//        )
-//        setContentView(binding!!.root)
-//        activity = this
-//        binding!!.arrowBack.setOnClickListener { (activity as SignUpActivity).finish() }
-//
-//        binding!!.signUpBt.setOnClickListener {
-//            email = binding!!.email.text.toString()
-//            password = binding!!.password.text.toString()
-//            repPassword = binding!!.passwordRep.text.toString()
-//            userName = binding!!.userName.text.toString()
-//            if (checkPassword(password!!, repPassword!!, email!!, userName!!) == true) {
-//                FirebaseAuth.getInstance().createUserWithEmailAndPassword(email!!, password!!)
-//                    .addOnCompleteListener { task ->
-//                        if (task.isSuccessful) {
-//                            val userInfo = HashMap<String, String>()
-//                            userInfo["email"] = email!!
-//                            userInfo["profileImage"] = ""
-//                            userInfo["books"] = ""
-//                            userInfo["username"] = userName!!
-//                            FirebaseDatabase.getInstance().reference.child("Users").child(
-//                                FirebaseAuth.getInstance().currentUser!!.uid
-//                            )
-//                                .setValue(userInfo).addOnCompleteListener { databaseTask ->
-//                                    if (databaseTask.isSuccessful) {
-//                                        startActivity(
-//                                            Intent(
-//                                                this@SignUpActivity,
-//                                                MainActivity::class.java
-//                                            )
-//                                        )
-//                                    } else {
-//                                        Toast.makeText(
-//                                            this@SignUpActivity,
-//                                            "Saving user error",
-//                                            Toast.LENGTH_SHORT
-//                                        ).show()
-//                                    }
-//                                }
-//                            val userRole = HashMap<String, String>()
-//                            userRole["role"] = "user"
-//                            FirebaseDatabase.getInstance().reference.child("Roles").child(
-//                                FirebaseAuth.getInstance().currentUser!!.uid
-//                            ).setValue(userRole)
-//                        }
-//                    }
-//            }
-//        }
-//    }
-//
-//    fun checkPassword(pas1: String, pas2: String, email: String, userName: String): Boolean {
-//        if (email.isEmpty() || userName.isEmpty() || pas1.isEmpty() || pas2.isEmpty()) {
-//            Toast.makeText(this, "Fields can't be empty", Toast.LENGTH_SHORT).show()
-//        } else {
-//            if (pas1.length < 8) {
-//                Toast.makeText(this, "Password too short", Toast.LENGTH_SHORT).show()
-//            } else {
-//                if (pas1 != pas2) {
-//                    Toast.makeText(this, "Passwords don't match", Toast.LENGTH_SHORT).show()
-//                } else {
-//                    return true
-//                }
-//            }
-//        }
-//        return false
-//    }
-//}
 
 class SignUpActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySignUpBinding
@@ -145,20 +66,39 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     private fun registerUser(login: String, password: String, email: String, userName: String) {
-        val call = ApiClient.authApi.register(RegisterRequest(login, password, userName, email))
+        val displayName = if (userName.isNotBlank()) userName else login
+        Log.d("SignUpActivity", "REGISTER name=$displayName email=${email.trim()} password=$password")
+        Toast.makeText(this, "Отправка на сервер", Toast.LENGTH_SHORT).show()
+        val call = ApiClient.authApi.register(
+            RegisterRequest(
+                name = displayName,
+                email = email.trim(),
+                password = password
+            )
+        )
+
         call.enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
-                if (response.isSuccessful) {
-                    val intent = Intent(this@SignUpActivity, LoginActivity::class.java)
-                    startActivity(intent)
+                if (response.isSuccessful && response.body() != null) {
+                    Toast.makeText(this@SignUpActivity, "Регистрация успешна", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@SignUpActivity, LoginActivity::class.java))
+                    finish()
                 } else {
-                    Toast.makeText(this@SignUpActivity, "Email is not valid", Toast.LENGTH_LONG).show()
+                    val errorText = response.errorBody()?.string()
+                    Toast.makeText(
+                        this@SignUpActivity,
+                        "Ошибка регистрации: ${response.code()} ${errorText ?: ""}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
 
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
-                Toast.makeText(this@SignUpActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
-                Log.d("API", "Error: ${t.message}")
+                Toast.makeText(
+                    this@SignUpActivity,
+                    "Network error: ${t.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         })
     }

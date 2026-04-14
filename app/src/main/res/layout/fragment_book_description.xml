@@ -19,6 +19,8 @@
             android:layout_height="wrap_content"
 
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+
             <ImageView
                 android:id="@+id/arrow_back"
                 android:layout_width="25dp"
@@ -37,9 +39,10 @@
 
                 <ImageView
                     android:id="@+id/book_iv"
-                    android:layout_width="wrap_content"
+                    android:layout_width="140dp"
                     android:layout_height="200dp"
-                    android:src="@drawable/peace"/>
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/books"/>
             </androidx.cardview.widget.CardView>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -76,10 +79,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
-            android:textSize="18sp"
-            android:text="@string/download"
+            android:layout_marginBottom="16dp"
             android:backgroundTint="@color/dark_brown"
-            android:layout_marginBottom="16dp"/>
+            android:text="В избранное"
+            android:textSize="18sp" />
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"

@@ -10,10 +10,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.nolamarel.onlinelibrary.ApiClient
+import com.nolamarel.onlinelibrary.R
+import com.nolamarel.onlinelibrary.network.UpdateStatusRequest
 import com.nolamarel.onlinelibrary.auth.SessionManager
 import com.nolamarel.onlinelibrary.databinding.FragmentBookDescriptionBinding
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 
 class BookDescriptionFragment : Fragment() {
 
@@ -31,10 +32,13 @@ class BookDescriptionFragment : Fragment() {
         bookId = arguments?.getString("bookId") ?: ""
         contextRef = requireContext()
 
+        binding.bookDownloadBtn.text = "В избранное"
+
         loadBook(bookId)
+        checkFavoriteState(bookId)
 
         binding.bookDownloadBtn.setOnClickListener {
-            addBookToLibrary(bookId)
+            addToFavorites(bookId)
         }
 
         binding.arrowBack.setOnClickListener {
@@ -49,19 +53,18 @@ class BookDescriptionFragment : Fragment() {
             try {
                 val response = ApiClient.serverApi.getBookById(bookId)
 
-                if (response.isSuccessful) {
-                    val book = response.body()
-                    if (book != null) {
-                        binding.bookName.text = book.title
-                        binding.bookAuthor.text = book.author
-                        binding.bookDesc.text = book.description ?: ""
+                if (response.isSuccessful && response.body() != null) {
+                    val book = response.body()!!
 
-                        Glide.with(requireContext())
-                            .load(book.image)
-                            .into(binding.bookIv)
-                    } else {
-                        Toast.makeText(contextRef, "Книга не найдена", Toast.LENGTH_SHORT).show()
-                    }
+                    binding.bookName.text = book.title
+                    binding.bookAuthor.text = book.author
+                    binding.bookDesc.text = book.description ?: "Описание отсутствует"
+
+                    Glide.with(requireContext())
+                        .load(book.coverUrl)
+                        .placeholder(R.drawable.books)
+                        .error(R.drawable.books)
+                        .into(binding.bookIv)
                 } else {
                     Toast.makeText(contextRef, "Книга не найдена", Toast.LENGTH_SHORT).show()
                 }
@@ -72,7 +75,30 @@ class BookDescriptionFragment : Fragment() {
         }
     }
 
-    private fun addBookToLibrary(bookId: String) {
+    private fun checkFavoriteState(bookId: String) {
+        val token = SessionManager(requireContext()).getToken()
+        if (token.isNullOrBlank()) return
+
+        val bearer = if (token.startsWith("Bearer ")) token else "Bearer $token"
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.serverApi.getMyBooks(bearer)
+
+                if (response.isSuccessful) {
+                    val foundBook = response.body()?.firstOrNull { it.bookId.toString() == bookId }
+                    if (foundBook?.status == "FAVORITE") {
+                        binding.bookDownloadBtn.text = "Уже в избранном"
+                        binding.bookDownloadBtn.isEnabled = false
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun addToFavorites(bookId: String) {
         val token = SessionManager(requireContext()).getToken()
 
         if (token.isNullOrBlank()) {
@@ -84,32 +110,40 @@ class BookDescriptionFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.serverApi.addBookToLibrary(
+                val myBooksResponse = ApiClient.serverApi.getMyBooks(bearer)
+
+                val alreadyExists = if (myBooksResponse.isSuccessful) {
+                    myBooksResponse.body()?.any { it.bookId.toString() == bookId } == true
+                } else {
+                    false
+                }
+
+                if (!alreadyExists) {
+                    val addResponse = ApiClient.serverApi.addBookToLibrary(
+                        token = bearer,
+                        bookId = bookId
+                    )
+
+                    if (!addResponse.isSuccessful) {
+                        Toast.makeText(contextRef, "Не удалось добавить книгу", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+                }
+
+                val statusResponse = ApiClient.serverApi.updateBookStatus(
                     token = bearer,
-                    bookId = bookId
+                    bookId = bookId,
+                    body = UpdateStatusRequest(status = "FAVORITE")
                 )
 
-                if (response.isSuccessful) {
-                    Toast.makeText(contextRef, "Книга успешно добавлена", Toast.LENGTH_SHORT).show()
-                } else if (response.code() == 409) {
-                    Toast.makeText(contextRef, "Книга уже в библиотеке", Toast.LENGTH_SHORT).show()
+                if (statusResponse.isSuccessful) {
+                    binding.bookDownloadBtn.text = "Уже в избранном"
+                    binding.bookDownloadBtn.isEnabled = false
+                    Toast.makeText(contextRef, "Книга добавлена в избранное", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(
-                        contextRef,
-                        "Не удалось добавить книгу: ${response.code()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(contextRef, "Не удалось добавить в избранное", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: HttpException) {
-                if (e.code() == 409) {
-                    Toast.makeText(contextRef, "Книга уже в библиотеке", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(
-                        contextRef,
-                        "Не удалось добавить книгу: ${e.message()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 Toast.makeText(contextRef, "Ошибка подключения к серверу", Toast.LENGTH_SHORT).show()

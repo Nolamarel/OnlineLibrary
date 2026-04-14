@@ -24,4 +24,26 @@ class SessionManager(context: Context) {
     fun clear() {
         prefs.edit().clear().apply()
     }
+
+    fun saveLastOpenedBook(
+        bookId: Long,
+        title: String?,
+        currentPage: Int,
+        localPath: String
+    ) {
+        prefs.edit()
+            .putLong("last_book_id", bookId)
+            .putString("last_book_title", title)
+            .putInt("last_book_page", currentPage)
+            .putString("last_book_path", localPath)
+            .apply()
+    }
+
+    fun getLastBookId(): Long = prefs.getLong("last_book_id", -1L)
+
+    fun getLastBookTitle(): String? = prefs.getString("last_book_title", null)
+
+    fun getLastBookPage(): Int = prefs.getInt("last_book_page", 0)
+
+    fun getLastBookPath(): String? = prefs.getString("last_book_path", null)
 }

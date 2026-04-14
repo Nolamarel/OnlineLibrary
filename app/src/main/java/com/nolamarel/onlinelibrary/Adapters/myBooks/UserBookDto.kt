@@ -9,5 +9,6 @@ data class UserBookDto(
     val title: String,
     val author: String,
     val coverUrl: String?,
-    val localFilePath: String? = null
+    val localFilePath: String? = null,
+    val currentPage: Int? = null
 )

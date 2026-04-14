@@ -14,10 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.nolamarel.onlinelibrary.Adapters.books.Book
 import com.nolamarel.onlinelibrary.Adapters.books.BookAdapter
 import com.nolamarel.onlinelibrary.Adapters.sections.Section
@@ -200,7 +196,12 @@ class SearchFragment : Fragment() {
                 binding.progressBar?.visibility = View.GONE
 
                 val books: List<Book> = response.body()?.map {
-                    Book(it.id, it.author, it.title, it.image)
+                    Book(
+                        bookId = it.bookId.toString(),
+                        bookAuthor = it.author,
+                        bookName = it.title,
+                        bookImage = it.coverUrl
+                    )
                 } ?: emptyList()
 
                 if (books.isEmpty()) {
@@ -238,16 +239,21 @@ class SearchFragment : Fragment() {
     }
 
     private fun loadSections() {
-        val sections = ArrayList<Section>()
-        FirebaseDatabase.getInstance().reference.child("genres")
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    for (sectionSnapshot in snapshot.children) {
-                        val name = sectionSnapshot.child("name").value.toString()
-                        val id = sectionSnapshot.key.toString()
-                        val sectionImage = sectionSnapshot.child("image").value.toString()
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.serverApi.getGenres()
 
-                        sections.add(Section(name, sectionImage, id))
+                if (response.isSuccessful) {
+                    val sections = ArrayList<Section>()
+
+                    response.body()?.forEach {
+                        sections.add(
+                            Section(
+                                sectionName = it.name,
+                                sectionIv = "",
+                                sectionId = it.genreId.toString()
+                            )
+                        )
                     }
 
                     binding.booksRv.layoutManager = GridLayoutManager(context, 2)
@@ -267,10 +273,14 @@ class SearchFragment : Fragment() {
                                 .commit()
                         }
                     })
+                } else {
+                    binding.placeholderError?.visibility = View.VISIBLE
                 }
-
-                override fun onCancelled(error: DatabaseError) {}
-            })
+            } catch (e: Exception) {
+                e.printStackTrace()
+                binding.placeholderError?.visibility = View.VISIBLE
+            }
+        }
     }
 
     override fun onDestroyView() {

@@ -23,8 +23,10 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val token = SessionManager(this).getToken()
-        if (token == null) {
+        val sessionManager = SessionManager(this)
+        val token = sessionManager.getToken()
+
+        if (token.isNullOrBlank()) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
@@ -48,9 +50,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.profile -> replaceFragment(ProfileFragment())
                 R.id.library -> replaceFragment(LibraryFragment())
                 R.id.search -> replaceFragment(SearchFragment())
-                R.id.reader -> {
-                    Toast.makeText(this, "Откройте книгу из библиотеки", Toast.LENGTH_SHORT).show()
-                }
+                R.id.reader -> openLastBook()
             }
             true
         }
@@ -65,5 +65,33 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
             .commit()
+    }
+
+    private fun openLastBook() {
+        val sessionManager = SessionManager(this)
+
+        val lastBookId = sessionManager.getLastBookId()
+        val lastBookTitle = sessionManager.getLastBookTitle()
+        val lastBookPage = sessionManager.getLastBookPage()
+        val lastBookPath = sessionManager.getLastBookPath()
+
+        if (lastBookId == -1L || lastBookPath.isNullOrBlank()) {
+            Toast.makeText(this, "Последняя открытая книга не найдена", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intent = Intent(this, PdfReaderActivity::class.java).apply {
+            putExtra("book_id", lastBookId)
+            putExtra("book_title", lastBookTitle)
+            putExtra("current_page", lastBookPage)
+
+            if (lastBookPath.startsWith("content://")) {
+                putExtra("file_uri", lastBookPath)
+            } else {
+                putExtra("file_path", lastBookPath)
+            }
+        }
+
+        startActivity(intent)
     }
 }

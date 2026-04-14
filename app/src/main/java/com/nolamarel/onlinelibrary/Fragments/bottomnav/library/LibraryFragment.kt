@@ -11,7 +11,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.nolamarel.onlinelibrary.Activities.PdfReaderActivity
 import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookAdapter
 import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookDto
@@ -74,7 +74,7 @@ class LibraryFragment : Fragment() {
             }
         )
 
-        binding.libraryRv.layoutManager = LinearLayoutManager(requireContext())
+        binding.libraryRv.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.libraryRv.adapter = adapter
     }
 
@@ -204,6 +204,8 @@ class LibraryFragment : Fragment() {
 
                 val intent = Intent(requireContext(), PdfReaderActivity::class.java).apply {
                     putExtra("book_id", bookId)
+                    putExtra("book_title", title)
+                    putExtra("current_page", 0)
                     putExtra("file_uri", uri.toString())
                 }
                 startActivity(intent)
@@ -244,6 +246,8 @@ class LibraryFragment : Fragment() {
 
         val intent = Intent(requireContext(), PdfReaderActivity::class.java).apply {
             putExtra("book_id", book.bookId)
+            putExtra("book_title", book.title ?: "Чтение PDF")
+            putExtra("current_page", book.currentPage ?: 0)
 
             if (localPath.startsWith("content://")) {
                 putExtra("file_uri", localPath)

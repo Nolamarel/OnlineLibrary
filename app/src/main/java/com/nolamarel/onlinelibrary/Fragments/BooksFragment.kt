@@ -46,7 +46,12 @@ class BooksFragment : Fragment() {
                 if (response.isSuccessful) {
                     val bookDTOs = response.body().orEmpty()
                     val books = ArrayList(bookDTOs.map {
-                        Book(it.id, it.author, it.title, it.image)
+                        Book(
+                            bookId = it.bookId.toString(),
+                            bookAuthor = it.author,
+                            bookName = it.title,
+                            bookImage = it.coverUrl
+                        )
                     })
 
                     binding.sectionName.text = sectionName

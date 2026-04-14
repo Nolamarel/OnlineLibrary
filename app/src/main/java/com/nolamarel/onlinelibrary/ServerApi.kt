@@ -5,6 +5,7 @@ import com.nolamarel.onlinelibrary.network.CreateLocalBookRequest
 import com.nolamarel.onlinelibrary.network.CreateLocalBookResponse
 import com.nolamarel.onlinelibrary.network.MessageResponse
 import com.nolamarel.onlinelibrary.network.UpdateProgressRequest
+import com.nolamarel.onlinelibrary.network.UpdateStatusRequest
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -61,6 +62,14 @@ interface ServerApi {
 
     @GET("search")
     suspend fun searchBooks(
-        @Query("query") query: String
+        @Query("q") query: String
     ): Response<List<BookDTO>>
+
+    @PATCH("my-books/{bookId}/status")
+    suspend fun updateBookStatus(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: String,
+        @Body body: UpdateStatusRequest
+    ): Response<MessageResponse>
+
 }

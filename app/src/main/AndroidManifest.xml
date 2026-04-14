@@ -18,12 +18,11 @@
         android:theme="@style/Theme.OnlineLibrary"
         tools:targetApi="31">
         <activity
-            android:name=".Activities.ReadingActivity"
-            android:exported="false" />
+            android:name=".Activities.PdfReaderActivity"
+            android:exported="true" />
         <activity
             android:name=".Activities.LoginActivity"
             android:exported="false" />
-        <activity android:name=".Activities.PdfReaderActivity" />
         <activity
             android:name=".Activities.SignUpActivity"
             android:exported="false" />

@@ -9,7 +9,7 @@ interface AuthApi {
     @POST("auth/login")
     fun login(@Body request: LoginRequest): Call<AuthResponse>
 
-    @POST("register")
+    @POST("auth/register")
     fun register(@Body request: RegisterRequest): Call<AuthResponse>
 }
 

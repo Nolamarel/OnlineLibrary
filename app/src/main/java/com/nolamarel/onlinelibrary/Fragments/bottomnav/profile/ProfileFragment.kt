@@ -62,6 +62,10 @@ class ProfileFragment : Fragment() {
             replaceFragment(SupportServiceFragment())
         }
 
+        binding.cardViewFavorites.setOnClickListener {
+            replaceFragment(FavoriteBooksFragment())
+        }
+
         binding.cardViewIn23.setOnClickListener {
             val sharedPreferences = requireContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
             sharedPreferences.edit().clear().apply()
