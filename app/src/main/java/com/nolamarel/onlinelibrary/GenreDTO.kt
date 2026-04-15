@@ -1,7 +1,7 @@
-package com.nolamarel.onlinelibrary
+package com.nolamarel.onlinelibrary.network
 
-data class GenreDTO(
-    val genreId: String,
+data class GenreDto(
+    val genreId: Long,
     val name: String,
-    val image: String? = null
+    val imageUrl: String?
 )

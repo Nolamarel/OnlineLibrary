@@ -6,86 +6,82 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.nolamarel.onlinelibrary.Activities.LoginActivity
-import com.nolamarel.onlinelibrary.DatabaseHelper1
+import com.nolamarel.onlinelibrary.ApiClient
+import com.nolamarel.onlinelibrary.App
 import com.nolamarel.onlinelibrary.Fragments.AboutAppFragment
+import com.nolamarel.onlinelibrary.Fragments.AdminPanelFragment
 import com.nolamarel.onlinelibrary.Fragments.ChangePasswordFragment
+import com.nolamarel.onlinelibrary.Fragments.EditProfileFragment
+import com.nolamarel.onlinelibrary.Fragments.ModerationReviewsFragment
+import com.nolamarel.onlinelibrary.Fragments.MyReviewsFragment
 import com.nolamarel.onlinelibrary.Fragments.SupportServiceFragment
 import com.nolamarel.onlinelibrary.LocalizationManager
 import com.nolamarel.onlinelibrary.R
+import com.nolamarel.onlinelibrary.auth.SessionManager
 import com.nolamarel.onlinelibrary.databinding.FragmentProfileBinding
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.switchmaterial.SwitchMaterial
-import com.nolamarel.onlinelibrary.ApiClient
-import com.nolamarel.onlinelibrary.App
-import com.nolamarel.onlinelibrary.RetrofitInstance
 import kotlinx.coroutines.launch
 import java.io.IOException
 
 class ProfileFragment : Fragment() {
-    private lateinit var binding: FragmentProfileBinding
-    private var username: String? = null
-    private var userImage: String? = null
-    private var status: String? = null
+
+    private var _binding: FragmentProfileBinding? = null
+    private val binding get() = _binding!!
+
     private var filePath: Uri? = null
     private lateinit var localizationManager: LocalizationManager
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val themeSwitcher = view.findViewById<SwitchMaterial>(R.id.themeSwitcher)
-        themeSwitcher.isChecked = (requireActivity().application as App).darkTheme
-        themeSwitcher.setOnCheckedChangeListener { _, isChecked ->
-            (requireActivity().application as App).switchTheme(isChecked)
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentProfileBinding.inflate(inflater, container, false)
+        _binding = FragmentProfileBinding.inflate(inflater, container, false)
         localizationManager = LocalizationManager(requireContext())
 
+        setupClicks()
+        setupThemeSwitcher()
         loadUserInfo()
 
-        binding.cardViewIn21.setOnClickListener { selectImage() }
+        return binding.root
+    }
 
-        binding.cardViewIn2.setOnClickListener {
-            replaceFragment(SupportServiceFragment())
+    private fun setupThemeSwitcher() {
+        val themeSwitcher = binding.root.findViewById<com.google.android.material.switchmaterial.SwitchMaterial>(R.id.themeSwitcher)
+        themeSwitcher.isChecked = (requireActivity().application as App).darkTheme
+        themeSwitcher.setOnCheckedChangeListener { _, isChecked ->
+            (requireActivity().application as App).switchTheme(isChecked)
         }
+    }
 
-        binding.cardViewFavorites.setOnClickListener {
-            replaceFragment(FavoriteBooksFragment())
+    private fun setupClicks() {
+        binding.cardViewIn21.setOnClickListener { replaceFragment(EditProfileFragment()) }
+        binding.cardViewIn24.setOnClickListener { selectImage() }
+        binding.cardViewIn2.setOnClickListener { replaceFragment(MyReviewsFragment()) }
+        binding.cardViewFavorites.setOnClickListener { replaceFragment(FavoriteBooksFragment()) }
+        binding.cardViewIn22.setOnClickListener { replaceFragment(ChangePasswordFragment()) }
+        binding.cardViewIn3.setOnClickListener { replaceFragment(AboutAppFragment()) }
+        binding.languageTv.setOnClickListener { toggleLanguage() }
+        binding.cardViewModeration.setOnClickListener {
+            replaceFragment(ModerationReviewsFragment())
+        }
+        binding.cardViewAdmin.setOnClickListener {
+            replaceFragment(AdminPanelFragment())
         }
 
         binding.cardViewIn23.setOnClickListener {
-            val sharedPreferences = requireContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-            sharedPreferences.edit().clear().apply()
+            SessionManager(requireContext()).clear()
+
             startActivity(Intent(requireContext(), LoginActivity::class.java))
             requireActivity().finish()
         }
-
-        binding.cardViewIn22.setOnClickListener {
-            replaceFragment(ChangePasswordFragment())
-        }
-
-        binding.cardViewIn3.setOnClickListener {
-            replaceFragment(AboutAppFragment())
-        }
-
-        binding.languageTv.setOnClickListener {
-            toggleLanguage()
-        }
-
-        return binding.root
     }
 
     private fun replaceFragment(fragment: Fragment) {
@@ -98,12 +94,7 @@ class ProfileFragment : Fragment() {
     private fun toggleLanguage() {
         val newLanguage = if (localizationManager.currentLanguage == "ru") "en" else "ru"
         localizationManager.setLanguage(newLanguage)
-        // Обновляем UI после смены языка
-        updateUIAfterLanguageChange()
-    }
 
-    private fun updateUIAfterLanguageChange() {
-        // Перезагружаем фрагмент для применения языковых изменений
         parentFragmentManager.beginTransaction()
             .detach(this)
             .attach(this)
@@ -111,47 +102,73 @@ class ProfileFragment : Fragment() {
     }
 
     private fun loadUserInfo() {
-        val sessionManager = com.nolamarel.onlinelibrary.auth.SessionManager(requireContext())
+        val sessionManager = SessionManager(requireContext())
         val token = sessionManager.getToken()
-        val userId = sessionManager.getUserId()
 
-        if (token.isNullOrBlank() || userId == -1L) {
-            Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show()
+        if (token.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Сессия не найдена", Toast.LENGTH_SHORT).show()
             return
         }
 
         val bearer = if (token.startsWith("Bearer ")) token else "Bearer $token"
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.serverApi.getUserById(bearer, userId.toString())
+                val response = ApiClient.serverApi.getMe(bearer)
+
+                if (!isAdded || _binding == null) return@launch
+
                 if (response.isSuccessful) {
-                    val user = response.body() ?: return@launch
-                    binding.profileUsername.text = user.username
-                    Log.d("ProfileFragment", "User loaded: ${user.username}")
+                    val user = response.body()
+
+                    if (user == null) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Не удалось загрузить профиль",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@launch
+                    }
+
+                    binding.profileUsername.text = user.name
+                    binding.profileStatus.text = buildStatusText(user.role, user.isActive)
+                    binding.cardViewModeration.visibility =
+                        if (user.role.uppercase() == "MODERATOR" || user.role.uppercase() == "ADMIN") {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+
+                    binding.cardViewAdmin.visibility =
+                        if (user.role.uppercase() == "ADMIN") View.VISIBLE else View.GONE
+
                 } else {
-                    Toast.makeText(context, "Failed to load user", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Ошибка загрузки профиля",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show()
+                if (!isAdded || _binding == null) return@launch
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка сети при загрузке профиля",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
-
-        val dbHelper = DatabaseHelper1(context, userId.toString())
-        val rowCount = dbHelper.getRowCount(dbHelper.writableDatabase)
-
-        status = when {
-            rowCount == 0 -> getString(R.string.beginner)
-            rowCount in 1..3 -> getString(R.string.reader_)
-            rowCount in 4..7 -> getString(R.string.bookworm)
-            rowCount in 8..11 -> getString(R.string.librarian)
-            else -> getString(R.string.reading_wizard)
-        }
-
-        binding.profileStatus.text = status
     }
 
+    private fun buildStatusText(role: String, isActive: Boolean): String {
+        if (!isActive) return "Пользователь неактивен"
+
+        return when (role.uppercase()) {
+            "ADMIN" -> "Администратор"
+            "MODERATOR" -> "Модератор"
+            else -> "Пользователь"
+        }
+    }
 
     private fun selectImage() {
         val intent = Intent().apply {
@@ -161,23 +178,30 @@ class ProfileFragment : Fragment() {
         pickImageActivityResultLauncher.launch(intent)
     }
 
-    private val pickImageActivityResultLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                filePath = uri
-                try {
-                    val bitmap = MediaStore.Images.Media.getBitmap(
-                        requireContext().contentResolver,
-                        uri
-                    )
-                    binding.profileImage.setImageBitmap(bitmap)
-                } catch (e: IOException) {
-                    Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show()
+    private val pickImageActivityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    filePath = uri
+                    try {
+                        val bitmap = MediaStore.Images.Media.getBitmap(
+                            requireContext().contentResolver,
+                            uri
+                        )
+                        binding.profileImage.setImageBitmap(bitmap)
+                    } catch (e: IOException) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Не удалось загрузить изображение",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
-    }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

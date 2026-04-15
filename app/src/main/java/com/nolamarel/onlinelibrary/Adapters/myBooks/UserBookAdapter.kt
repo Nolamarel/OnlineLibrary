@@ -3,14 +3,15 @@ package com.nolamarel.onlinelibrary.Adapters.myBooks
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.nolamarel.onlinelibrary.R
-import com.nolamarel.onlinelibrary.databinding.ItemUserBookBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.nolamarel.onlinelibrary.R
+import com.nolamarel.onlinelibrary.databinding.ItemUserBookBinding
 
 class UserBookAdapter(
     private val items: List<UserBookDto>,
-    private val onBookClick: (UserBookDto) -> Unit
+    private val onBookClick: (UserBookDto) -> Unit,
+    private val onDeleteClick: (UserBookDto) -> Unit
 ) : RecyclerView.Adapter<UserBookAdapter.UserBookViewHolder>() {
 
     inner class UserBookViewHolder(
@@ -19,14 +20,13 @@ class UserBookAdapter(
 
         fun bind(book: UserBookDto) {
             binding.tvBookTitle.text = book.title
-//            binding.tvBookAuthor.text = book.author
             binding.tvBookProgress.text = formatProgress(book.progress)
 
             if (!book.coverUrl.isNullOrBlank()) {
                 Glide.with(binding.ivBookCover.context)
                     .load(book.coverUrl)
-                    .placeholder(R.drawable.books) // пока грузится
-                    .error(R.drawable.books)       // если ошибка
+                    .placeholder(R.drawable.books)
+                    .error(R.drawable.books)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(binding.ivBookCover)
             } else {
@@ -39,6 +39,10 @@ class UserBookAdapter(
 
             binding.ivBookCover.setOnClickListener {
                 onBookClick(book)
+            }
+
+            binding.btnDeleteBook.setOnClickListener {
+                onDeleteClick(book)
             }
         }
 

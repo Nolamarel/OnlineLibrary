@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_brown"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/arrow_back"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="Назад"
+        android:src="@drawable/ic_action_name"
+        app:layout_constraintBottom_toBottomOf="@id/titleTv"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/titleTv" />
+
+    <TextView
+        android:id="@+id/titleTv"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:gravity="center"
+        android:text="Библиотеки пользователей"
+        android:textColor="@color/black"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/userBooksRv"
+        app:layout_constraintEnd_toEndOf="@id/userBooksRv"
+        app:layout_constraintStart_toStartOf="@id/userBooksRv"
+        app:layout_constraintTop_toTopOf="@id/userBooksRv" />
+
+    <TextView
+        android:id="@+id/emptyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Записи не найдены"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/userBooksRv"
+        app:layout_constraintEnd_toEndOf="@id/userBooksRv"
+        app:layout_constraintStart_toStartOf="@id/userBooksRv"
+        app:layout_constraintTop_toTopOf="@id/userBooksRv" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/userBooksRv"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/titleTv" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

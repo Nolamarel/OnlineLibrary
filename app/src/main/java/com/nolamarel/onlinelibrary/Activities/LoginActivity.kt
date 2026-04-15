@@ -2,7 +2,7 @@ package com.nolamarel.onlinelibrary.Activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -19,6 +19,7 @@ import retrofit2.Response
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
+    private lateinit var sessionManager: SessionManager
     private var toolbar: Toolbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,10 +28,21 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        toolbar = findViewById(R.id.myToolbar)
-        setSupportActionBar(toolbar)
-        title = "Sign In"
+        sessionManager = SessionManager(this)
 
+        if (sessionManager.isLoggedIn()) {
+            openMainScreen()
+            return
+        }
+
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.title = ""
+
+        setupClicks()
+    }
+
+    private fun setupClicks() {
         binding.signUp.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
@@ -39,18 +51,44 @@ class LoginActivity : AppCompatActivity() {
             val email = binding.loginEt.text.toString().trim()
             val password = binding.passwordEt.text.toString().trim()
 
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
-            } else if (password.length < 8) {
-                Toast.makeText(this, "Пароль слишком короткий", Toast.LENGTH_SHORT).show()
-            } else {
-                loginUser(email, password)
-            }
+            if (!validateInput(email, password)) return@setOnClickListener
+
+            loginUser(email, password)
         }
     }
 
+    private fun validateInput(email: String, password: String): Boolean {
+        when {
+            email.isEmpty() -> {
+                binding.loginEt.error = "Введите email"
+                binding.loginEt.requestFocus()
+                return false
+            }
+
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                binding.loginEt.error = "Введите корректный email"
+                binding.loginEt.requestFocus()
+                return false
+            }
+
+            password.isEmpty() -> {
+                binding.passwordEt.error = "Введите пароль"
+                binding.passwordEt.requestFocus()
+                return false
+            }
+
+            password.length < 6 -> {
+                binding.passwordEt.error = "Пароль должен содержать минимум 6 символов"
+                binding.passwordEt.requestFocus()
+                return false
+            }
+        }
+
+        return true
+    }
+
     private fun loginUser(email: String, password: String) {
-        binding.signInButton.isEnabled = false
+        setLoading(true)
 
         val call = ApiClient.authApi.login(LoginRequest(email, password))
 
@@ -59,16 +97,13 @@ class LoginActivity : AppCompatActivity() {
                 call: Call<AuthResponse>,
                 response: Response<AuthResponse>
             ) {
-                binding.signInButton.isEnabled = true
+                setLoading(false)
 
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
 
-                    val sessionManager = SessionManager(this@LoginActivity)
                     sessionManager.saveToken(body.token)
                     sessionManager.saveUserId(body.userId)
-
-                    Log.d("LoginActivity", "Получен userId: ${body.userId}")
 
                     Toast.makeText(
                         this@LoginActivity,
@@ -76,29 +111,47 @@ class LoginActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                    finish()
+                    openMainScreen()
                 } else {
                     val errorText = response.errorBody()?.string()
+
                     Toast.makeText(
                         this@LoginActivity,
-                        "Ошибка входа: ${errorText ?: response.code()}",
+                        when {
+                            response.code() == 401 -> "Неверный email или пароль"
+                            !errorText.isNullOrBlank() -> "Ошибка входа: $errorText"
+                            else -> "Не удалось выполнить вход"
+                        },
                         Toast.LENGTH_LONG
                     ).show()
                 }
             }
 
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
-                binding.signInButton.isEnabled = true
+                setLoading(false)
 
                 Toast.makeText(
                     this@LoginActivity,
-                    "Ошибка сети: ${t.message}",
+                    "Ошибка сети. Проверьте подключение к интернету",
                     Toast.LENGTH_LONG
                 ).show()
-
-                Log.d("LoginActivity", "Network error: ${t.message}")
             }
         })
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        binding.signInButton.isEnabled = !isLoading
+        binding.signUp.isEnabled = !isLoading
+
+        binding.signInButton.text = if (isLoading) {
+            "Вход..."
+        } else {
+            getString(R.string.sign_in_btn)
+        }
+    }
+
+    private fun openMainScreen() {
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
     }
 }

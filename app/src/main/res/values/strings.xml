@@ -22,10 +22,10 @@
     <string name="section_books">Книги по разделам</string>
     <string name="profile">Профиль</string>
     <string name="interface_language">Язык интерфейса</string>
-    <string name="report_a_problem">Сообщить о проблеме</string>
+    <string name="my_reviews">Мои отзывы</string>
     <string name="about_app1">О приложении</string>
     <string name="settings">Настройки</string>
-    <string name="change_profile_photo">Изменить фото профиля</string>
+    <string name="edit_profile">Редактировать профиль</string>
     <string name="log_out">Выйти</string>
     <string name="search">Поиск</string>
     <string name="support_service">Служба поддержки</string>

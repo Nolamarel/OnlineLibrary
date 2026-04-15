@@ -1,100 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding = "16dp"
-    android:background="@color/light_brown"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".Fragments.BookDescriptionFragment">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:background="@android:color/transparent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
-
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            app:layout_scrollFlags="scroll|exitUntilCollapsed">
-
-
-            <ImageView
-                android:id="@+id/arrow_back"
-                android:layout_width="25dp"
-                android:layout_marginLeft="10dp"
-                android:layout_height="25dp"
-                android:src="@drawable/ic_action_name" />
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@android:color/transparent"
-                android:layout_gravity="center"
-                app:layout_collapseMode="parallax">
-
-                <ImageView
-                    android:id="@+id/book_iv"
-                    android:layout_width="140dp"
-                    android:layout_height="200dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/books"/>
-            </androidx.cardview.widget.CardView>
-
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-
-    </com.google.android.material.appbar.AppBarLayout>
+    android:background="@color/light_brown">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:padding="16dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/arrow_back"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Назад"
+                android:src="@drawable/ic_action_name"
+                app:layout_constraintBottom_toBottomOf="@id/book_name"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/book_name" />
+
+            <TextView
+                android:id="@+id/book_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="40dp"
+                android:gravity="center"
+                android:text="Название книги"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/book_iv"
+            android:layout_width="150dp"
+            android:layout_height="220dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            android:src="@drawable/books" />
+
         <TextView
             android:id="@+id/book_author"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
-            android:textSize="18sp"
-            android:layout_gravity="center"
+            android:text="Автор"
             android:textColor="@color/grey"
-            android:text="Маргарет Митчелл"
-            />
-        <TextView
-            android:id="@+id/book_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="20sp"
-            android:layout_gravity="center"
-            android:text="Унесенные ветром"
-            />
+            android:textSize="16sp" />
+
         <Button
             android:id="@+id/book_download_btn"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="@color/dark_brown"
-            android:text="В избранное"
-            android:textSize="18sp" />
+            android:background="@drawable/bg_primary_button"
+            android:backgroundTint="@null"
+            android:text="Добавить в библиотеку"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/leaveReviewBtn"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_outline_button"
+            android:backgroundTint="@null"
+            android:text="Оставить отзыв"
+            android:textAllCaps="false"
+            android:textColor="@color/dark_brown"
+            android:textSize="16sp" />
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
-            <TextView
-                android:id="@+id/book_desc"
-                android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:text=""/>
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/book_desc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="4dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="Отзывы"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/ratingSummaryTv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Рейтинг: 0.0 (0 отзывов)"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/reviewsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="4dp"
+                    android:text="Отзывы загружаются..."
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+
+            </LinearLayout>
         </androidx.core.widget.NestedScrollView>
+
     </LinearLayout>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

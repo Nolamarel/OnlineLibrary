@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val selectedItemId = savedInstanceState?.getInt("selected_item") ?: R.id.main
-        binding.bottonNav.selectedItemId = selectedItemId
+        binding.bottomNav.selectedItemId = selectedItemId
 
         if (savedInstanceState == null) {
             when (selectedItemId) {
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.bottonNav.setOnItemSelectedListener { item: MenuItem ->
+        binding.bottomNav.setOnItemSelectedListener { item: MenuItem ->
             when (item.itemId) {
                 R.id.main -> replaceFragment(MainFragment())
                 R.id.profile -> replaceFragment(ProfileFragment())
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt("selected_item", binding.bottonNav.selectedItemId)
+        outState.putInt("selected_item", binding.bottomNav.selectedItemId)
     }
 
     private fun replaceFragment(fragment: Fragment) {

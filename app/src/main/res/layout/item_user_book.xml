@@ -4,27 +4,41 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
+    app:cardBackgroundColor="@color/light_brown1"
     app:cardCornerRadius="18dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@android:color/white"
-    app:strokeColor="@color/dark_brown"
-    app:strokeWidth="1dp">
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp"
-        android:gravity="center_horizontal">
+        android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/ivBookCover"
-            android:layout_width="92dp"
-            android:layout_height="120dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/books"
-            android:background="@drawable/book_cover_bg"
-            android:clipToOutline="true" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/ivBookCover"
+                android:layout_width="92dp"
+                android:layout_height="128dp"
+                android:layout_gravity="center"
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/books" />
+
+            <ImageButton
+                android:id="@+id/btnDeleteBook"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="top|end"
+                android:background="@android:color/transparent"
+                android:contentDescription="Удалить книгу"
+                android:padding="6dp"
+                android:src="@android:drawable/ic_menu_delete"
+                app:tint="@color/dark_brown" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvBookTitle"
@@ -43,8 +57,9 @@
             android:id="@+id/tvBookProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
-            android:background="@drawable/search_view"
+            android:background="@drawable/bg_chip"
             android:paddingHorizontal="10dp"
             android:paddingVertical="6dp"
             android:text="0%"

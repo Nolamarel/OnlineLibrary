@@ -23,10 +23,10 @@
     <string name="section_books">Books by section</string>
     <string name="profile">Profile</string>
     <string name="interface_language">Language interface</string>
-    <string name="report_a_problem">Report a problem</string>
+    <string name="my_reviews">My reviews</string>
     <string name="about_app1">About the app</string>
     <string name="settings">Settings</string>
-    <string name="change_profile_photo">Change profile photo</string>
+    <string name="edit_profile">Edit profile</string>
     <string name="log_out">Log out</string>
     <string name="search">Search</string>
     <string name="support_service">Support Service</string>

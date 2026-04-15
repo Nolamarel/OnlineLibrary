@@ -7,49 +7,47 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.nolamarel.onlinelibrary.Adapters.sections.SectionAdapter.SectionViewHolder
 import com.nolamarel.onlinelibrary.OnItemClickListener.ItemClickListener
 import com.nolamarel.onlinelibrary.R
 
-class SectionAdapter : RecyclerView.Adapter<SectionViewHolder> {
-    private var sections = ArrayList<Section>()
+class SectionAdapter(
+    private var sections: ArrayList<Section>,
     private var listener: ItemClickListener? = null
-
-    constructor(sections: ArrayList<Section>, listener: ItemClickListener?) {
-        this.listener = listener
-        this.sections = sections
-    }
-
-    constructor(sections: ArrayList<Section>) {
-        this.sections = sections
-    }
+) : RecyclerView.Adapter<SectionAdapter.SectionViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SectionViewHolder {
-        val view =
-            LayoutInflater.from(parent.context).inflate(R.layout.sections_item, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.sections_item, parent, false)
         return SectionViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: SectionViewHolder, position: Int) {
         val section = sections[position]
 
-        holder.section_name.text = section.sectionName
-        Glide.with(holder.itemView.context).load(section.sectionIv).into(holder.section_iv)
+        holder.sectionName.text = section.sectionName
+
+        if (!section.sectionIv.isNullOrBlank()) {
+            Glide.with(holder.itemView.context)
+                .load(section.sectionIv)
+                .placeholder(R.drawable.books)
+                .error(R.drawable.books)
+                .into(holder.sectionImage)
+        } else {
+            holder.sectionImage.setImageResource(R.drawable.books)
+        }
 
         holder.itemView.setOnClickListener {
             val clickedPosition = holder.adapterPosition
             if (clickedPosition != RecyclerView.NO_POSITION) {
-                listener!!.onItemClick(clickedPosition)
+                listener?.onItemClick(clickedPosition)
             }
         }
     }
 
-    override fun getItemCount(): Int {
-        return sections.size
-    }
+    override fun getItemCount(): Int = sections.size
 
     inner class SectionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var section_name: TextView = itemView.findViewById(R.id.section_name)
-        var section_iv: ImageView = itemView.findViewById(R.id.section_iv)
+        val sectionName: TextView = itemView.findViewById(R.id.section_name)
+        val sectionImage: ImageView = itemView.findViewById(R.id.section_iv)
     }
 }

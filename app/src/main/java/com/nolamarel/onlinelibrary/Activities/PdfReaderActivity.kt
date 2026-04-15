@@ -2,7 +2,6 @@ package com.nolamarel.onlinelibrary.Activities
 
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
@@ -38,123 +37,144 @@ class PdfReaderActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pdf_reader)
-        Toast.makeText(this, "PdfReaderActivity opened", Toast.LENGTH_LONG).show()
+
+        initViews()
+        readArguments()
+        setupClicks()
+
+        if (!validateInput()) return
+
+        tvTitle.text = bookTitle?.takeIf { it.isNotBlank() } ?: "Чтение PDF"
+
+        openPdf()
+        showReaderHint()
+    }
+
+    private fun initViews() {
         pdfView = findViewById(R.id.pdfView)
         btnBack = findViewById(R.id.btnBack)
         tvTitle = findViewById(R.id.tvTitle)
         tvProgress = findViewById(R.id.tvProgress)
         tvPageIndicator = findViewById(R.id.tvPageIndicator)
         topBar = findViewById(R.id.topBar)
+    }
 
+    private fun readArguments() {
         bookId = intent.getLongExtra("book_id", -1L)
         filePath = intent.getStringExtra("file_path")
         fileUri = intent.getStringExtra("file_uri")
         startPage = intent.getIntExtra("current_page", 0)
         bookTitle = intent.getStringExtra("book_title")
+    }
 
-        tvTitle.text = bookTitle ?: "Чтение PDF"
-
+    private fun setupClicks() {
         btnBack.setOnClickListener {
             finish()
         }
+    }
 
+    private fun validateInput(): Boolean {
         if (bookId == -1L) {
-            Toast.makeText(this, "Нет bookId", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Не удалось открыть книгу", Toast.LENGTH_SHORT).show()
             finish()
-            return
+            return false
         }
 
-        Log.d("PdfReader", "bookId=$bookId")
-        Log.d("PdfReader", "filePath=$filePath")
-        Log.d("PdfReader", "fileUri=$fileUri")
-        Log.d("PdfReader", "bookTitle=$bookTitle")
-        Log.d("PdfReader", "startPage=$startPage")
+        if (filePath.isNullOrBlank() && fileUri.isNullOrBlank()) {
+            Toast.makeText(this, "Не передан PDF-файл", Toast.LENGTH_SHORT).show()
+            finish()
+            return false
+        }
 
+        return true
+    }
+
+    private fun openPdf() {
         when {
             !filePath.isNullOrBlank() -> openPdfFromPath(filePath!!)
             !fileUri.isNullOrBlank() -> openPdfFromUri(fileUri!!)
             else -> {
-                Toast.makeText(this, "Не передан путь к PDF", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Не удалось открыть PDF", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
-
-        showReaderHint()
     }
 
     private fun openPdfFromPath(path: String) {
-        Log.d("PdfReader", "openPdfFromPath path=$path startPage=$startPage")
-
         val file = File(path)
-        Log.d("PdfReader", "exists=${file.exists()} canRead=${file.canRead()} length=${file.length()}")
 
-        if (!file.exists()) {
-            Toast.makeText(this, "Файл не найден: $path", Toast.LENGTH_LONG).show()
+        if (!file.exists() || !file.canRead()) {
+            Toast.makeText(this, "Файл PDF не найден или недоступен", Toast.LENGTH_LONG).show()
+            finish()
             return
         }
 
         pdfView.fromFile(file)
-            .defaultPage(startPage)
+            .defaultPage(startPage.coerceAtLeast(0))
             .enableSwipe(true)
             .swipeHorizontal(false)
             .enableDoubletap(true)
             .onLoad { pageCount ->
-                Log.d("PdfReader", "PDF loaded from file, pageCount=$pageCount")
                 totalPages = pageCount
+                currentPage = startPage.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
                 updatePageUi()
             }
             .onPageChange { page, pageCount ->
-                Log.d("PdfReader", "onPageChange page=$page pageCount=$pageCount")
                 currentPage = page
                 totalPages = pageCount
                 updatePageUi()
             }
-            .onError { t ->
-                Log.e("PdfReader", "PDF file error", t)
-                Toast.makeText(this, "Ошибка PDF: ${t.message}", Toast.LENGTH_LONG).show()
+            .onError {
+                Toast.makeText(
+                    this,
+                    "Ошибка при открытии PDF-файла",
+                    Toast.LENGTH_LONG
+                ).show()
+                finish()
             }
             .load()
     }
 
     private fun openPdfFromUri(uriString: String) {
-        Log.d("PdfReader", "openPdfFromUri uriString=$uriString startPage=$startPage")
-
         try {
             val uri = Uri.parse(uriString)
 
-            contentResolver.openInputStream(uri)?.use {
-                Log.d("PdfReader", "URI input stream opened successfully")
-            } ?: Log.d("PdfReader", "URI input stream is null")
-
             pdfView.fromUri(uri)
-                .defaultPage(startPage)
+                .defaultPage(startPage.coerceAtLeast(0))
                 .enableSwipe(true)
                 .swipeHorizontal(false)
                 .enableDoubletap(true)
                 .onLoad { pageCount ->
-                    Log.d("PdfReader", "PDF loaded from uri, pageCount=$pageCount")
                     totalPages = pageCount
+                    currentPage = startPage.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
                     updatePageUi()
                 }
                 .onPageChange { page, pageCount ->
-                    Log.d("PdfReader", "onPageChange page=$page pageCount=$pageCount")
                     currentPage = page
                     totalPages = pageCount
                     updatePageUi()
                 }
-                .onError { t ->
-                    Log.e("PdfReader", "PDF uri error", t)
-                    Toast.makeText(this, "Ошибка PDF URI: ${t.message}", Toast.LENGTH_LONG).show()
+                .onError {
+                    Toast.makeText(
+                        this,
+                        "Ошибка при открытии PDF по ссылке",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finish()
                 }
                 .load()
         } catch (e: Exception) {
-            Log.e("PdfReader", "openPdfFromUri exception", e)
-            Toast.makeText(this, "Ошибка открытия PDF: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                "Не удалось открыть PDF",
+                Toast.LENGTH_LONG
+            ).show()
+            finish()
         }
     }
 
     private fun updatePageUi() {
-        val shownPage = currentPage + 1
+        val shownPage = if (totalPages == 0) 0 else currentPage + 1
         tvPageIndicator.text = "$shownPage / $totalPages"
         tvProgress.text = "${calculateProgress()}%"
     }
@@ -162,25 +182,33 @@ class PdfReaderActivity : AppCompatActivity() {
     private fun showReaderHint() {
         Toast.makeText(
             this,
-            "Свайпайте вверх и вниз для чтения PDF",
-            Toast.LENGTH_LONG
+            "Свайпайте вверх и вниз для чтения",
+            Toast.LENGTH_SHORT
         ).show()
     }
 
     override fun onPause() {
         super.onPause()
-        sendProgress()
+        saveProgress()
     }
 
-    private fun sendProgress() {
-        val token = SessionManager(this).getToken() ?: return
+    override fun onDestroy() {
+        saveProgress()
+        super.onDestroy()
+    }
+
+    private fun saveProgress() {
+        if (bookId == -1L) return
+
+        val sessionManager = SessionManager(this)
+        val token = sessionManager.getToken() ?: return
         val bearer = if (token.startsWith("Bearer ")) token else "Bearer $token"
 
-        val progress = calculateProgress()
         val effectivePath = fileUri ?: filePath
+        val progress = calculateProgress()
 
         if (!effectivePath.isNullOrBlank()) {
-            SessionManager(this).saveLastOpenedBook(
+            sessionManager.saveLastOpenedBook(
                 bookId = bookId,
                 title = bookTitle,
                 currentPage = currentPage,
@@ -203,15 +231,15 @@ class PdfReaderActivity : AppCompatActivity() {
                     bookId = bookId.toString(),
                     body = body
                 )
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (_: Exception) {
             }
         }
     }
 
     private fun calculateProgress(): String {
-        if (totalPages == 0) return "0.00"
-        val percent = ((currentPage + 1).toDouble() / totalPages.toDouble()) * 100
+        if (totalPages <= 0) return "0.00"
+
+        val percent = ((currentPage + 1).toDouble() / totalPages.toDouble()) * 100.0
         return String.format("%.2f", percent)
     }
 }

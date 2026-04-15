@@ -1,24 +1,26 @@
 package com.nolamarel.onlinelibrary.Activities
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import androidx.appcompat.widget.Toolbar
 import com.nolamarel.onlinelibrary.ApiClient
 import com.nolamarel.onlinelibrary.AuthResponse
+import com.nolamarel.onlinelibrary.R
 import com.nolamarel.onlinelibrary.RegisterRequest
+import com.nolamarel.onlinelibrary.auth.SessionManager
 import com.nolamarel.onlinelibrary.databinding.ActivitySignUpBinding
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-
 class SignUpActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivitySignUpBinding
+    private lateinit var sessionManager: SessionManager
+    private var toolbar: Toolbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,80 +28,180 @@ class SignUpActivity : AppCompatActivity() {
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        sessionManager = SessionManager(this)
+
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.title = ""
+
         binding.arrowBack.setOnClickListener { finish() }
 
         binding.signUpBt.setOnClickListener {
-            val login = binding.login.text.toString() // новое поле логина
-            val email = binding.email.text.toString()
-            val password = binding.password.text.toString()
-            val repPassword = binding.passwordRep.text.toString()
-            val userName = binding.userName.text.toString()
+            val userName = binding.userName.text.toString().trim()
+            val email = binding.email.text.toString().trim()
+            val login = binding.login.text.toString().trim()
+            val password = binding.password.text.toString().trim()
+            val repeatPassword = binding.passwordRep.text.toString().trim()
 
-            if (checkPassword(password, repPassword, email, userName, login)) {
-                registerUser(login, password, email, userName)
+            if (!validateInput(userName, email, login, password, repeatPassword)) {
+                return@setOnClickListener
             }
+
+            registerUser(
+                login = login,
+                password = password,
+                email = email,
+                userName = userName
+            )
         }
     }
 
-    private fun checkPassword(
-        pas1: String,
-        pas2: String,
-        email: String,
+    private fun validateInput(
         userName: String,
-        login: String
+        email: String,
+        login: String,
+        password: String,
+        repeatPassword: String
     ): Boolean {
-        return when {
-            login.isEmpty() || email.isEmpty() || userName.isEmpty() || pas1.isEmpty() || pas2.isEmpty() -> {
-                Toast.makeText(this, "Fields can't be empty", Toast.LENGTH_SHORT).show()
-                false
+        when {
+            userName.isEmpty() -> {
+                binding.userName.error = "Введите имя пользователя"
+                binding.userName.requestFocus()
+                return false
             }
-            pas1.length < 8 -> {
-                Toast.makeText(this, "Password too short", Toast.LENGTH_SHORT).show()
-                false
+
+            userName.length < 2 -> {
+                binding.userName.error = "Имя должно содержать минимум 2 символа"
+                binding.userName.requestFocus()
+                return false
             }
-            pas1 != pas2 -> {
-                Toast.makeText(this, "Passwords don't match", Toast.LENGTH_SHORT).show()
-                false
+
+            email.isEmpty() -> {
+                binding.email.error = "Введите email"
+                binding.email.requestFocus()
+                return false
             }
-            else -> true
+
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                binding.email.error = "Введите корректный email"
+                binding.email.requestFocus()
+                return false
+            }
+
+            login.isEmpty() -> {
+                binding.login.error = "Введите логин"
+                binding.login.requestFocus()
+                return false
+            }
+
+            login.length < 3 -> {
+                binding.login.error = "Логин должен содержать минимум 3 символа"
+                binding.login.requestFocus()
+                return false
+            }
+
+            password.isEmpty() -> {
+                binding.password.error = "Введите пароль"
+                binding.password.requestFocus()
+                return false
+            }
+
+            password.length < 6 -> {
+                binding.password.error = "Пароль должен содержать минимум 6 символов"
+                binding.password.requestFocus()
+                return false
+            }
+
+            repeatPassword.isEmpty() -> {
+                binding.passwordRep.error = "Повторите пароль"
+                binding.passwordRep.requestFocus()
+                return false
+            }
+
+            password != repeatPassword -> {
+                binding.passwordRep.error = "Пароли не совпадают"
+                binding.passwordRep.requestFocus()
+                return false
+            }
         }
+
+        return true
     }
 
-    private fun registerUser(login: String, password: String, email: String, userName: String) {
+    private fun registerUser(
+        login: String,
+        password: String,
+        email: String,
+        userName: String
+    ) {
+        setLoading(true)
+
         val displayName = if (userName.isNotBlank()) userName else login
-        Log.d("SignUpActivity", "REGISTER name=$displayName email=${email.trim()} password=$password")
-        Toast.makeText(this, "Отправка на сервер", Toast.LENGTH_SHORT).show()
+
         val call = ApiClient.authApi.register(
             RegisterRequest(
                 name = displayName,
-                email = email.trim(),
+                email = email,
                 password = password
             )
         )
 
         call.enqueue(object : Callback<AuthResponse> {
-            override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
+            override fun onResponse(
+                call: Call<AuthResponse>,
+                response: Response<AuthResponse>
+            ) {
+                setLoading(false)
+
                 if (response.isSuccessful && response.body() != null) {
-                    Toast.makeText(this@SignUpActivity, "Регистрация успешна", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this@SignUpActivity, LoginActivity::class.java))
+                    val body = response.body()!!
+
+                    sessionManager.saveToken(body.token)
+                    sessionManager.saveUserId(body.userId)
+
+                    Toast.makeText(
+                        this@SignUpActivity,
+                        "Регистрация прошла успешно",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    startActivity(Intent(this@SignUpActivity, MainActivity::class.java))
                     finish()
                 } else {
                     val errorText = response.errorBody()?.string()
+
                     Toast.makeText(
                         this@SignUpActivity,
-                        "Ошибка регистрации: ${response.code()} ${errorText ?: ""}",
+                        when {
+                            response.code() == 409 -> "Пользователь с таким email уже существует"
+                            !errorText.isNullOrBlank() -> "Ошибка регистрации: $errorText"
+                            else -> "Не удалось зарегистрироваться"
+                        },
                         Toast.LENGTH_LONG
                     ).show()
                 }
             }
 
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                setLoading(false)
+
                 Toast.makeText(
                     this@SignUpActivity,
-                    "Network error: ${t.message}",
-                    Toast.LENGTH_SHORT
+                    "Ошибка сети. Проверьте подключение к интернету",
+                    Toast.LENGTH_LONG
                 ).show()
             }
         })
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        binding.signUpBt.isEnabled = !isLoading
+        binding.arrowBack.isEnabled = !isLoading
+
+        binding.signUpBt.text = if (isLoading) {
+            "Регистрация..."
+        } else {
+            getString(R.string.sign_in_do)
+        }
     }
 }

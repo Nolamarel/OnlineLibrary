@@ -10,108 +10,123 @@
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:backgroundTint="@color/dark_brown"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:background="@color/dark_brown"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/arrow_back"
-            android:layout_width="wrap_content"
-            android:layout_height="25dp"
-            android:src="@drawable/ic_action_name" />
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="16dp"
+            android:contentDescription="Назад"
+            android:src="@drawable/ic_action_name"
+            app:tint="@android:color/white" />
 
         <TextView
             android:id="@+id/toolbar_reading_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/sign_up1"
             android:layout_gravity="center"
-            android:textColor="@color/black"
-            android:textSize="24sp" />
-
+            android:text="@string/sign_up1"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
 
-
-    <EditText
-        android:id="@+id/email"
-        android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="8dp"
-        android:hint="@string/email"
-        android:inputType="text"
-        app:layout_constraintEnd_toEndOf="@+id/user_name"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/user_name"
-        app:layout_constraintTop_toBottomOf="@+id/user_name" />
-
-    <EditText
-        android:id="@+id/login"
-        android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="8dp"
-        android:hint="Логин"
-        android:inputType="text"
-        app:layout_constraintEnd_toEndOf="@+id/email"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/email"
-        app:layout_constraintTop_toBottomOf="@+id/email" />
-
-    <EditText
-        android:id="@+id/password"
-        android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="24dp"
-        android:hint="@string/password"
-        android:inputType="textPassword"
-        app:layout_constraintEnd_toEndOf="@+id/login"
-        app:layout_constraintStart_toStartOf="@+id/login"
-        app:layout_constraintTop_toBottomOf="@+id/login" />
-
-    <EditText
-        android:id="@+id/password_rep"
-        android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="24dp"
-        android:hint="@string/repeat_password"
-        android:inputType="textPassword"
-        app:layout_constraintEnd_toEndOf="@+id/password"
-        app:layout_constraintStart_toStartOf="@+id/password"
-        app:layout_constraintTop_toBottomOf="@+id/password" />
-
-    <EditText
-        android:id="@+id/birth_day"
-        android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="24dp"
-        android:hint="@string/date_of_birth"
-        android:inputType="date"
-        app:layout_constraintEnd_toEndOf="@+id/password_rep"
-        app:layout_constraintStart_toStartOf="@+id/password_rep"
-        app:layout_constraintTop_toBottomOf="@+id/password_rep" />
-
-    <Button
-        android:id="@+id/sign_up_bt"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:backgroundTint="@color/dark_brown"
-        android:text="@string/sign_in_do"
-        app:layout_constraintEnd_toEndOf="@+id/birth_day"
-        app:layout_constraintStart_toStartOf="@+id/birth_day"
-        app:layout_constraintTop_toBottomOf="@+id/birth_day" />
-
-    <EditText
-        android:id="@+id/user_name"
-        android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="32dp"
-        android:inputType="text"
-        android:hint="@string/username"
-        app:layout_constraintEnd_toEndOf="parent"
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <EditText
+                android:id="@+id/user_name"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="@string/username"
+                android:inputType="textPersonName"
+                android:paddingHorizontal="16dp" />
+
+            <EditText
+                android:id="@+id/email"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input"
+                android:hint="@string/email"
+                android:inputType="textEmailAddress"
+                android:paddingHorizontal="16dp" />
+
+            <EditText
+                android:id="@+id/login"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input"
+                android:hint="Логин"
+                android:inputType="text"
+                android:paddingHorizontal="16dp" />
+
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input"
+                android:hint="@string/password"
+                android:inputType="textPassword"
+                android:paddingHorizontal="16dp" />
+
+            <EditText
+                android:id="@+id/password_rep"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input"
+                android:hint="@string/repeat_password"
+                android:inputType="textPassword"
+                android:paddingHorizontal="16dp" />
+
+            <EditText
+                android:id="@+id/birth_day"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input"
+                android:hint="@string/date_of_birth"
+                android:inputType="date"
+                android:paddingHorizontal="16dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/sign_up_bt"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_primary_button"
+                android:backgroundTint="@null"
+                android:text="@string/sign_in_do"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

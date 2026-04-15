@@ -10,10 +10,9 @@
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:backgroundTint="@color/dark_brown"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:background="@color/dark_brown"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -22,82 +21,95 @@
             android:id="@+id/toolbar_reading_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/sign_in"
             android:layout_gravity="center"
-            android:textColor="@color/black"
-            android:textSize="24sp" />
-
+            android:text="@string/sign_in"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold" />
     </androidx.appcompat.widget.Toolbar>
 
-    <EditText
-        android:id="@+id/login_et"
-        android:layout_width="250dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="60dp"
-        android:paddingStart="8dp"
-        android:hint="Логин"
-        android:inputType="text"
-        app:layout_constraintEnd_toEndOf="@+id/main_books_iv"
-        app:layout_constraintStart_toStartOf="@+id/main_books_iv"
-        app:layout_constraintTop_toBottomOf="@+id/main_books_iv" />
-
-    <EditText
-        android:id="@+id/password_et"
-        android:layout_width="250dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="24dp"
-        android:paddingStart="8dp"
-        android:hint="@string/password"
-        android:inputType="textPassword"
-        app:layout_constraintEnd_toEndOf="@+id/login_et"
-        app:layout_constraintStart_toStartOf="@+id/login_et"
-        app:layout_constraintTop_toBottomOf="@+id/login_et" />
-
-    <ImageView
-        android:id="@+id/main_books_iv"
-        android:layout_width="252dp"
-        android:layout_height="242dp"
-        android:layout_marginTop="45dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        app:srcCompat="@drawable/books" />
-
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="24dp"
+        android:id="@+id/content_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/no_account"
+        <ImageView
+            android:id="@+id/main_books_iv"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:contentDescription="@null"
+            app:srcCompat="@drawable/books" />
+
+        <EditText
+            android:id="@+id/login_et"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="28dp"
+            android:background="@drawable/bg_input"
+            android:hint="@string/email"
+            android:inputType="textEmailAddress"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/black"
+            android:textColorHint="@color/grey" />
+
+        <EditText
+            android:id="@+id/password_et"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_input"
+            android:hint="@string/password"
+            android:inputType="textPassword"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/black"
+            android:textColorHint="@color/grey" />
+
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_primary_button"
+            android:text="@string/sign_in_btn"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:id="@+id/login_bottom_block"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/you_dont_have_an_account_yet" />
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/sign_up"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="4dp"
-            android:text="@string/sign_in_do"
-            android:textColor="@color/dark_brown" />
+            <TextView
+                android:id="@+id/no_account"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/you_dont_have_an_account_yet"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/sign_up"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="@string/sign_in_do"
+                android:textColor="@color/dark_brown"
+                android:textStyle="bold" />
+        </LinearLayout>
+
     </LinearLayout>
-
-    <Button
-        android:id="@+id/sign_in_button"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="@color/dark_brown"
-        android:text="@string/sign_in_btn"
-        app:layout_constraintEnd_toEndOf="@+id/password_et"
-        app:layout_constraintStart_toStartOf="@+id/password_et"
-        app:layout_constraintTop_toBottomOf="@+id/password_et" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

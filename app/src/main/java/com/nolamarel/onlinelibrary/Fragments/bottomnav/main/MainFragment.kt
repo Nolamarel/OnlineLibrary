@@ -18,18 +18,20 @@ import com.nolamarel.onlinelibrary.databinding.FragmentMainBinding
 import kotlinx.coroutines.launch
 
 class MainFragment : Fragment() {
-    private var binding: FragmentMainBinding? = null
+
+    private var _binding: FragmentMainBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentMainBinding.inflate(inflater, container, false)
+        _binding = FragmentMainBinding.inflate(inflater, container, false)
 
         loadSections()
 
-        return binding!!.root
+        return binding.root
     }
 
     private fun loadSections() {
@@ -37,32 +39,32 @@ class MainFragment : Fragment() {
             try {
                 val response = ApiClient.serverApi.getGenres()
 
+                if (!isAdded || _binding == null) return@launch
+
                 if (response.isSuccessful) {
                     val genres = response.body().orEmpty()
-                    val sections = ArrayList<Section>()
 
-                    for (genre in genres) {
-                        sections.add(
+                    val sections = ArrayList(
+                        genres.map { genre ->
                             Section(
-                                genre.name,
-                                genre.image ?: "",
-                                genre.genreId
+                                sectionName = genre.name,
+                                sectionIv = genre.imageUrl,
+                                sectionId = genre.genreId.toString()
                             )
-                        )
-                    }
+                        }
+                    )
 
-                    binding?.booksMainRv?.layoutManager = GridLayoutManager(context, 2)
-                    binding?.booksMainRv?.adapter = SectionAdapter(
+                    binding.booksMainRv.layoutManager = GridLayoutManager(context, 2)
+                    binding.booksMainRv.adapter = SectionAdapter(
                         sections,
                         object : ItemClickListener {
                             override fun onItemClick(position: Int) {
-                                val selectedSection = sections[position].sectionId
-                                val selectedSectionName = sections[position].sectionName
+                                val selectedSection = sections[position]
 
                                 val fragment = BooksFragment().apply {
                                     arguments = Bundle().apply {
-                                        putString("sectionId", selectedSection)
-                                        putString("sectionName", selectedSectionName)
+                                        putString("sectionId", selectedSection.sectionId)
+                                        putString("sectionName", selectedSection.sectionName)
                                     }
                                 }
 
@@ -74,17 +76,26 @@ class MainFragment : Fragment() {
                         }
                     )
                 } else {
-                    Toast.makeText(context, "Ошибка загрузки жанров", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Ошибка загрузки жанров",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(context, "Ошибка подключения к серверу", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                if (!isAdded || _binding == null) return@launch
+
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка подключения к серверу",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        binding = null
+        _binding = null
     }
 }

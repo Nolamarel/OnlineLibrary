@@ -32,8 +32,7 @@ class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
 
-    private var lastSearchQuery: String = ""
-
+    private var lastSearchedQuery: String = ""
     companion object {
         private const val SEARCH_DEBOUNCE_DELAY = 800L
     }
@@ -42,23 +41,37 @@ class SearchFragment : Fragment() {
     private val searchRunnable = Runnable { searchRequest() }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSearchBinding.inflate(inflater, container, false)
 
+        setupSearch()
+        loadSections()
+
+        return binding.root
+    }
+
+    private fun setupSearch() {
         binding.serchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
 
             override fun onQueryTextSubmit(query: String): Boolean {
-                searchBook(query)
+                handler.removeCallbacks(searchRunnable)
+
+                val trimmed = query.trim()
+                if (trimmed.isNotEmpty() && trimmed != lastSearchedQuery) {
+                    searchBook(trimmed)
+                }
                 return true
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                if (newText.isNotEmpty()) {
-                    searchDebounce()
-                } else {
+                if (newText.isBlank()) {
+                    lastSearchedQuery = ""
                     loadSections()
+                } else {
+                    searchDebounce()
                 }
                 return true
             }
@@ -69,14 +82,6 @@ class SearchFragment : Fragment() {
                 loadSearchHistory()
             }
         }
-
-//        binding.clearHistoryButton?.setOnClickListener {
-//            clearHistory()
-//        }
-
-        loadSections()
-
-        return binding.root
     }
 
     private fun getToken(): String? {
@@ -90,61 +95,103 @@ class SearchFragment : Fragment() {
     }
 
     private fun searchRequest() {
-        val query = binding.serchView.query.toString()
-        if (query.isNotEmpty()) {
+        if (_binding == null) return
+
+        val query = binding.serchView.query?.toString()?.trim().orEmpty()
+        if (query.isNotEmpty() && query != lastSearchedQuery) {
             searchBook(query)
         }
     }
 
-    private fun searchBook(query: String) {
-        lastSearchQuery = query
+    private fun hidePlaceholders() {
+        binding.progressBar?.visibility = View.GONE
+        binding.placeholderError?.visibility = View.GONE
+        binding.placeholderNoResults?.visibility = View.GONE
+    }
 
+    private fun searchBook(query: String) {
+        lastSearchedQuery = query
+        hidePlaceholders()
         binding.progressBar?.visibility = View.VISIBLE
         binding.booksRv.visibility = View.GONE
 
+        val token = getToken()
+        if (token.isNullOrBlank()) {
+            binding.progressBar?.visibility = View.GONE
+            binding.placeholderError?.visibility = View.VISIBLE
+            Toast.makeText(
+                requireContext(),
+                "Сессия не найдена. Войдите снова",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.serverApi.searchBooks(query)
+                val response = ApiClient.serverApi.searchBooks(
+                    query = query,
+                    token = token
+                )
+
+                if (!isAdded || _binding == null) return@launch
+
+                binding.progressBar?.visibility = View.GONE
 
                 if (!response.isSuccessful) {
+                    binding.placeholderError?.visibility = View.VISIBLE
                     Toast.makeText(
-                        context,
+                        requireContext(),
                         "Ошибка сервера: ${response.code()}",
                         Toast.LENGTH_LONG
                     ).show()
                     return@launch
                 }
 
-                binding.progressBar?.visibility = View.GONE
+                val items = response.body().orEmpty()
 
-                val books = response.body()?.map {
-                    Book(
-                        bookId = it.externalId,
-                        bookAuthor = it.author,
-                        bookName = it.title,
-                        bookImage = it.coverUrl,
-                        source = "google"
-                    )
-                } ?: emptyList()
+                val books = items.mapNotNull { item ->
+                    val resolvedBookId = item.externalId ?: item.bookId?.toString()
+
+                    if (resolvedBookId.isNullOrBlank()) {
+                        null
+                    } else {
+                        Book(
+                            bookId = resolvedBookId,
+                            bookAuthor = item.author,
+                            bookName = item.title,
+                            bookImage = item.coverUrl,
+                            source = item.source
+                        )
+                    }
+                }
 
                 if (books.isEmpty()) {
+                    binding.booksRv.visibility = View.GONE
                     binding.placeholderNoResults?.visibility = View.VISIBLE
                 } else {
                     binding.placeholderNoResults?.visibility = View.GONE
                     binding.booksRv.visibility = View.VISIBLE
-
                     binding.booksRv.layoutManager = LinearLayoutManager(context)
                     binding.booksRv.adapter = BookAdapter(
                         ArrayList(books),
                         object : ItemClickListener {
                             override fun onItemClick(position: Int) {
-                                val selectedBookId = books[position].bookId
+                                val selectedItem = items[position]
+                                val selectedBook = books[position]
+
                                 val fragment = BookDescriptionFragment().apply {
                                     arguments = Bundle().apply {
-                                        putString("bookId", selectedBookId)
-                                        putString("source", books[position].source)
+                                        putString("bookId", selectedBook.bookId)
+                                        putString("source", selectedBook.source)
+
+                                        putString("title", selectedItem.title)
+                                        putString("author", selectedItem.author)
+                                        putString("description", selectedItem.description)
+                                        putString("coverUrl", selectedItem.coverUrl)
                                     }
                                 }
+
                                 parentFragmentManager.beginTransaction()
                                     .replace(R.id.fragment_container, fragment)
                                     .addToBackStack(null)
@@ -154,14 +201,22 @@ class SearchFragment : Fragment() {
                     )
                 }
 
-            } catch (e: Exception) {
+            } catch (_: Exception) {
+                if (!isAdded || _binding == null) return@launch
+
                 binding.progressBar?.visibility = View.GONE
+                binding.booksRv.visibility = View.GONE
                 binding.placeholderError?.visibility = View.VISIBLE
+
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка подключения к серверу",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
 
-    // 🔥 ЗАГРУЗКА ИСТОРИИ С СЕРВЕРА
     private fun loadSearchHistory() {
         val token = getToken() ?: return
 
@@ -169,37 +224,33 @@ class SearchFragment : Fragment() {
             try {
                 val response = ApiClient.serverApi.getSearchHistory(token)
 
+                if (!isAdded || _binding == null) return@launch
+
                 if (response.isSuccessful) {
                     val history = response.body()?.map { it.query } ?: emptyList()
-                    showHistory(history)
+                    if (history.isEmpty()) {
+                        loadSections()
+                    } else {
+                        showHistory(history)
+                    }
                 }
 
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 
-    // 🔥 ОЧИСТКА ИСТОРИИ
-//    private fun clearHistory() {
-//        val token = getToken() ?: return
-//
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            try {
-//                val response = ApiClient.serverApi.clearSearchHistory(token)
-//
-//                if (response.isSuccessful) {
-//                    showHistory(emptyList())
-//                    Toast.makeText(context, "История очищена", Toast.LENGTH_SHORT).show()
-//                }
-//
-//            } catch (_: Exception) {}
-//        }
-//    }
-
     private fun showHistory(history: List<String>) {
+        hidePlaceholders()
+
+        binding.booksRv.visibility = View.VISIBLE
         binding.booksRv.layoutManager = LinearLayoutManager(context)
         binding.booksRv.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            override fun onCreateViewHolder(
+                parent: ViewGroup,
+                viewType: Int
+            ): RecyclerView.ViewHolder {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(android.R.layout.simple_list_item_1, parent, false)
                 return object : RecyclerView.ViewHolder(view) {}
@@ -222,52 +273,74 @@ class SearchFragment : Fragment() {
     }
 
     private fun loadSections() {
+        hidePlaceholders()
+        binding.progressBar?.visibility = View.VISIBLE
+        binding.booksRv.visibility = View.GONE
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.serverApi.getGenres()
+
+                if (!isAdded || _binding == null) return@launch
+
+                binding.progressBar?.visibility = View.GONE
 
                 if (response.isSuccessful) {
                     val sections = response.body()?.map {
                         Section(
                             sectionName = it.name,
-                            sectionIv = "",
+                            sectionIv = it.imageUrl,
                             sectionId = it.genreId.toString()
                         )
                     } ?: emptyList()
 
+                    binding.booksRv.visibility = View.VISIBLE
                     binding.booksRv.layoutManager = GridLayoutManager(context, 2)
-                    binding.booksRv.adapter = SectionAdapter(sections as ArrayList<Section>, object : ItemClickListener {
-                        override fun onItemClick(position: Int) {
-                            val fragment = BooksFragment().apply {
-                                arguments = Bundle().apply {
-                                    putString("sectionId", sections[position].sectionId)
-                                    putString("sectionName", sections[position].sectionName)
+                    binding.booksRv.adapter = SectionAdapter(
+                        ArrayList(sections),
+                        object : ItemClickListener {
+                            override fun onItemClick(position: Int) {
+                                val selectedSection = sections[position]
+
+                                val fragment = BooksFragment().apply {
+                                    arguments = Bundle().apply {
+                                        putString("sectionId", selectedSection.sectionId)
+                                        putString("sectionName", selectedSection.sectionName)
+                                    }
                                 }
+
+                                parentFragmentManager.beginTransaction()
+                                    .replace(R.id.fragment_container, fragment)
+                                    .addToBackStack(null)
+                                    .commit()
                             }
-                            parentFragmentManager.beginTransaction()
-                                .replace(R.id.fragment_container, fragment)
-                                .addToBackStack(null)
-                                .commit()
                         }
-                    })
+                    )
+                } else {
+                    binding.placeholderError?.visibility = View.VISIBLE
+                    Toast.makeText(
+                        requireContext(),
+                        "Ошибка загрузки жанров",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
+            } catch (_: Exception) {
+                if (!isAdded || _binding == null) return@launch
 
-            } catch (e: Exception) {
-            e.printStackTrace()
+                binding.progressBar?.visibility = View.GONE
+                binding.placeholderError?.visibility = View.VISIBLE
 
-            Toast.makeText(
-                requireContext(),
-                "Ошибка: ${e.message}",
-                Toast.LENGTH_LONG
-            ).show()
-
-            binding.progressBar?.visibility = View.GONE
-            binding.placeholderError?.visibility = View.VISIBLE
-        }
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка подключения к серверу",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 
     override fun onDestroyView() {
+        handler.removeCallbacks(searchRunnable)
         super.onDestroyView()
         _binding = null
     }

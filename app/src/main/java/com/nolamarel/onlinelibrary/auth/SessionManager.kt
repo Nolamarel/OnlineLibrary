@@ -3,6 +3,7 @@ package com.nolamarel.onlinelibrary.auth
 import android.content.Context
 
 class SessionManager(context: Context) {
+
     private val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
 
     fun saveToken(token: String) {
@@ -21,10 +22,19 @@ class SessionManager(context: Context) {
         return prefs.getLong("userId", -1L)
     }
 
+    // 👇 основной метод очистки
     fun clear() {
         prefs.edit().clear().apply()
     }
 
+    // 👇 ДОБАВИЛИ alias (чтобы не ломать код)
+    fun clearSession() {
+        clear()
+    }
+
+    // -----------------------------
+    // Последняя открытая книга
+    // -----------------------------
     fun saveLastOpenedBook(
         bookId: Long,
         title: String?,
@@ -46,4 +56,8 @@ class SessionManager(context: Context) {
     fun getLastBookPage(): Int = prefs.getInt("last_book_page", 0)
 
     fun getLastBookPath(): String? = prefs.getString("last_book_path", null)
+
+    fun isLoggedIn(): Boolean {
+        return !getToken().isNullOrEmpty()
+    }
 }

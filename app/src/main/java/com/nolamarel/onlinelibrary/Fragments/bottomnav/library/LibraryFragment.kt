@@ -1,5 +1,6 @@
 package com.nolamarel.onlinelibrary.Fragments.bottomnav.library
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -71,6 +72,9 @@ class LibraryFragment : Fragment() {
             items = books,
             onBookClick = { book ->
                 openBook(book)
+            },
+            onDeleteClick = { book ->
+                showDeleteDialog(book)
             }
         )
 
@@ -91,6 +95,8 @@ class LibraryFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val response = ApiClient.serverApi.getMyBooks(bearer)
+
+                if (!isAdded || _binding == null) return@launch
 
                 if (response.isSuccessful) {
                     val body = response.body()
@@ -113,6 +119,66 @@ class LibraryFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                if (!isAdded || _binding == null) return@launch
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка сети: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun showDeleteDialog(book: UserBookDto) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Удалить книгу")
+            .setMessage("Удалить \"${book.title}\" из библиотеки?")
+            .setPositiveButton("Удалить") { _, _ ->
+                deleteBook(book)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun deleteBook(book: UserBookDto) {
+        val token = SessionManager(requireContext()).getToken()
+
+        if (token.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Вы не авторизованы", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val bearer = if (token.startsWith("Bearer ")) token else "Bearer $token"
+
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.serverApi.deleteBookFromLibrary(
+                    token = bearer,
+                    bookId = book.bookId.toString()
+                )
+
+                if (!isAdded || _binding == null) return@launch
+
+                if (response.isSuccessful) {
+                    books.removeAll { it.bookId == book.bookId }
+                    adapter.notifyDataSetChanged()
+
+                    Toast.makeText(
+                        requireContext(),
+                        "Книга удалена из библиотеки",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    val errorText = response.errorBody()?.string()
+                    Toast.makeText(
+                        requireContext(),
+                        "Не удалось удалить книгу: ${errorText ?: response.code()}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                if (!isAdded || _binding == null) return@launch
                 Toast.makeText(
                     requireContext(),
                     "Ошибка сети: ${e.message}",
@@ -212,6 +278,7 @@ class LibraryFragment : Fragment() {
 
             } catch (e: Exception) {
                 e.printStackTrace()
+                if (!isAdded || _binding == null) return@launch
                 Toast.makeText(
                     requireContext(),
                     "Ошибка загрузки PDF: ${e.message}",

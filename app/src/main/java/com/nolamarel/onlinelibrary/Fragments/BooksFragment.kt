@@ -45,9 +45,10 @@ class BooksFragment : Fragment() {
 
                 if (response.isSuccessful) {
                     val bookDTOs = response.body().orEmpty()
+
                     val books = ArrayList(bookDTOs.map {
                         Book(
-                            bookId = if (it.source == "google") it.externalId!! else it.bookId.toString(),
+                            bookId = it.externalId ?: it.bookId.toString(),
                             bookAuthor = it.author,
                             bookName = it.title,
                             bookImage = it.coverUrl,
@@ -61,13 +62,15 @@ class BooksFragment : Fragment() {
                         books,
                         object : OnItemClickListener.ItemClickListener {
                             override fun onItemClick(position: Int) {
-                                val selectedBookId = books[position].bookId
+                                val selected = books[position]
+
                                 val fragment = BookDescriptionFragment().apply {
                                     arguments = Bundle().apply {
-                                        putString("bookId", selectedBookId)
-                                        putString("source", books[position].source)
+                                        putString("bookId", selected.bookId)
+                                        putString("source", selected.source)
                                     }
                                 }
+
                                 parentFragmentManager.beginTransaction()
                                     .replace(R.id.fragment_container, fragment)
                                     .addToBackStack(null)
@@ -79,7 +82,6 @@ class BooksFragment : Fragment() {
                     Toast.makeText(context, "Ошибка загрузки книг", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
                 Toast.makeText(context, "Ошибка подключения к серверу", Toast.LENGTH_SHORT).show()
             }
         }
