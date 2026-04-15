@@ -183,6 +183,18 @@ class BookDescriptionFragment : Fragment() {
         }
     }
 
+    private fun formatRatingText(weightedRating: Double, averageRating: Double, reviewsCount: Int): String {
+        if (reviewsCount == 0) {
+            return "Рейтинг: — (0 отзывов)"
+        }
+
+        return "Рейтинг: %.1f (%d отзывов)\nСредняя оценка: %.1f".format(
+            weightedRating,
+            reviewsCount,
+            averageRating
+        )
+    }
+
     private fun loadReviews() {
         val actualBookId = localBookId ?: run {
             binding.ratingSummaryTv.text = "Рейтинг: —"
@@ -200,11 +212,11 @@ class BookDescriptionFragment : Fragment() {
                     val payload = response.body()!!
                     val reviews: List<ReviewResponse> = payload.reviews
 
-                    binding.ratingSummaryTv.text =
-                        "Рейтинг: %.1f (%d отзывов)".format(
-                            payload.averageRating,
-                            payload.reviewsCount
-                        )
+                    binding.ratingSummaryTv.text = formatRatingText(
+                        weightedRating = payload.weightedRating,
+                        averageRating = payload.averageRating,
+                        reviewsCount = payload.reviewsCount
+                    )
 
                     binding.reviewsText.text = if (reviews.isEmpty()) {
                         "Пока нет отзывов"

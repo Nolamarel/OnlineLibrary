@@ -1,17 +1,16 @@
 package com.nolamarel.onlinelibrary
 
+import BookReviewsResponse
 import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookDto
 import com.nolamarel.onlinelibrary.network.AdminSearchHistoryResponse
 import com.nolamarel.onlinelibrary.network.AdminUpdateReviewRequest
 import com.nolamarel.onlinelibrary.network.AdminUpdateUserBookRequest
 import com.nolamarel.onlinelibrary.network.AdminUpdateUserRequest
 import com.nolamarel.onlinelibrary.network.AdminUserBookResponse
-import com.nolamarel.onlinelibrary.network.BookReviewsResponse
 import com.nolamarel.onlinelibrary.network.ChangePasswordRequest
 import com.nolamarel.onlinelibrary.network.CreateLocalBookRequest
 import com.nolamarel.onlinelibrary.network.CreateLocalBookResponse
 import com.nolamarel.onlinelibrary.network.CreateReviewRequest
-import com.nolamarel.onlinelibrary.network.GenreDto
 import com.nolamarel.onlinelibrary.network.GenreRequest
 import com.nolamarel.onlinelibrary.network.GenreResponse
 import com.nolamarel.onlinelibrary.network.GoogleBookResponse
@@ -119,11 +118,6 @@ interface ServerApi {
         @Header("Authorization") token: String,
         @Body body: ChangePasswordRequest
     ): Response<MessageResponse>
-
-    @GET("books/{bookId}/reviews")
-    suspend fun getBookReviews(
-        @Path("bookId") bookId: String
-    ): Response<BookReviewsResponse>
 
     @GET("books/{bookId}/my-review")
     suspend fun getMyReviewForBook(
@@ -271,5 +265,8 @@ interface ServerApi {
         @Header("Authorization") token: String,
         @Path("reviewId") reviewId: String
     ): Response<MessageResponse>
+
+    @GET("books/{bookId}/reviews")
+    suspend fun getBookReviews(@Path("bookId") bookId: String): Response<BookReviewsResponse>
 
 }
