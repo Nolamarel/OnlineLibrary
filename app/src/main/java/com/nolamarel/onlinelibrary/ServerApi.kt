@@ -4,6 +4,8 @@ import com.nolamarel.onlinelibrary.Adapters.myBooks.UserBookDto
 import com.nolamarel.onlinelibrary.network.CreateLocalBookRequest
 import com.nolamarel.onlinelibrary.network.CreateLocalBookResponse
 import com.nolamarel.onlinelibrary.network.MessageResponse
+import com.nolamarel.onlinelibrary.network.SearchBookResponse
+import com.nolamarel.onlinelibrary.network.SearchHistoryDto
 import com.nolamarel.onlinelibrary.network.UpdateProgressRequest
 import com.nolamarel.onlinelibrary.network.UpdateStatusRequest
 import retrofit2.Response
@@ -62,8 +64,19 @@ interface ServerApi {
 
     @GET("search")
     suspend fun searchBooks(
-        @Query("q") query: String
-    ): Response<List<BookDTO>>
+        @Query("query") query: String,
+        @Header("Authorization") token: String? = null
+    ): Response<List<SearchBookResponse>>
+
+    @GET("my-search-history")
+    suspend fun getSearchHistory(
+        @Header("Authorization") token: String
+    ): Response<List<SearchHistoryDto>>
+
+    @DELETE("my-search-history")
+    suspend fun clearSearchHistory(
+        @Header("Authorization") token: String
+    ): Response<MessageResponse>
 
     @PATCH("my-books/{bookId}/status")
     suspend fun updateBookStatus(

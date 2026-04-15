@@ -34,7 +34,13 @@ class BookDescriptionFragment : Fragment() {
 
         binding.bookDownloadBtn.text = "В избранное"
 
-        loadBook(bookId)
+        val source = arguments?.getString("source") ?: "local"
+
+        if (source == "google") {
+            loadGoogleBook(bookId)
+        } else {
+            loadBook(bookId)
+        }
         checkFavoriteState(bookId)
 
         binding.bookDownloadBtn.setOnClickListener {
@@ -71,6 +77,36 @@ class BookDescriptionFragment : Fragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 Toast.makeText(contextRef, "Ошибка подключения к серверу", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun loadGoogleBook(externalId: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.serverApi.searchBooks(externalId)
+
+                if (response.isSuccessful) {
+                    val book = response.body()?.firstOrNull { it.externalId == externalId }
+
+                    if (book != null) {
+                        binding.bookName.text = book.title
+                        binding.bookAuthor.text = book.author
+                        binding.bookDesc.text = book.description ?: "Описание отсутствует"
+
+                        Glide.with(requireContext())
+                            .load(book.coverUrl)
+                            .placeholder(R.drawable.books)
+                            .error(R.drawable.books)
+                            .into(binding.bookIv)
+                    } else {
+                        Toast.makeText(contextRef, "Книга не найдена", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(contextRef, "Ошибка загрузки Google книги", Toast.LENGTH_SHORT).show()
             }
         }
     }

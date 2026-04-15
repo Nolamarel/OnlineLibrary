@@ -47,10 +47,11 @@ class BooksFragment : Fragment() {
                     val bookDTOs = response.body().orEmpty()
                     val books = ArrayList(bookDTOs.map {
                         Book(
-                            bookId = it.bookId.toString(),
+                            bookId = if (it.source == "google") it.externalId!! else it.bookId.toString(),
                             bookAuthor = it.author,
                             bookName = it.title,
-                            bookImage = it.coverUrl
+                            bookImage = it.coverUrl,
+                            source = it.source
                         )
                     })
 
@@ -64,6 +65,7 @@ class BooksFragment : Fragment() {
                                 val fragment = BookDescriptionFragment().apply {
                                     arguments = Bundle().apply {
                                         putString("bookId", selectedBookId)
+                                        putString("source", books[position].source)
                                     }
                                 }
                                 parentFragmentManager.beginTransaction()

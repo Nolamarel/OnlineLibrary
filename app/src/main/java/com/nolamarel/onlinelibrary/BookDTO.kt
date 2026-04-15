@@ -2,6 +2,7 @@ package com.nolamarel.onlinelibrary
 
 data class BookDTO(
     val bookId: Long,
+    val externalId: String?,
     val genreId: Long?,
     val title: String,
     val author: String,

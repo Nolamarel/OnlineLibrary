@@ -97,7 +97,7 @@ class LibraryFragment : Fragment() {
 
                     books.clear()
                     if (body != null) {
-                        books.addAll(body)
+                        books.addAll(body.filter { it.status != "FAVORITE" })
                     }
                     adapter.notifyDataSetChanged()
 

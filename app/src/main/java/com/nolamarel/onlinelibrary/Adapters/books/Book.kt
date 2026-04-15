@@ -15,6 +15,10 @@ data class Book(
     @SerializedName("image")
     val bookImage: String?,
 
+
+    @SerializedName("source")
+    val source: String?,
+
     @SerializedName("genreId")
     val bookGenre: String? = null,
 

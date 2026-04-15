@@ -55,7 +55,7 @@ object RetrofitInstance {
 
     val api: GoogleBooksApi by lazy {
         Retrofit.Builder()
-            .baseUrl("https://www.googleapis.com/books/v1/")
+            .baseUrl("http://www.googleapis.com/books/v1/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(GoogleBooksApi::class.java)
